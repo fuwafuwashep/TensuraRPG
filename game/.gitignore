@@ -1,0 +1,24 @@
+# Ren'Py compiled files
+*.rpyc
+*.rpymc
+
+# Ren'Py cache
+game/cache/
+cache/
+
+# Save files
+game/saves/
+saves/
+
+# Logs and crash files
+log.txt
+traceback.txt
+errors.txt
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Operating system junk
+.DS_Store
+Thumbs.db
