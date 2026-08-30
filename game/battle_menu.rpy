@@ -2,62 +2,40 @@
 # BATTLE MENU
 # ============================================================
 
-
-# ------------------------------------------------------------
-# MENU STATE
-# ------------------------------------------------------------
-
 default battle_menu_level = "main"
 default battle_category = None
 
-# These control which direction the wheel spins.
 default battle_spin_from = 0.0
 default battle_spin_to = 0.0
 
 
 # ------------------------------------------------------------
-# EQUIPPED MOVES
+# CURRENT EQUIPPED MOVES
+#
+# Later these will be changed by an outside-battle loadout menu.
 # ------------------------------------------------------------
-
-# These are placeholders for now.
-# Later, the player will organize these outside of battle.
 
 default battle_physical_moves = [
-    "Bite",
-    "Tail Strike",
-    "Wing Strike",
+    "Basic Attack",
 ]
 
-default battle_art_moves = [
-    "Aura Slash",
-    "Mana Bullet",
-    "Parry",
-    "Instant Movement",
-]
+default battle_art_moves = []
 
-default battle_magic_moves = [
-    "Fireball",
-    "Ice Wall",
-    "Heal",
-    "Wind Cutter",
-]
+default battle_magic_moves = []
 
 default battle_skill_moves = [
-    "Camouflage",
-    "Surface Grip",
-    "Manifestation",
-    "Dragon Form",
+    "Water Manipulation",
 ]
 
 
-# ------------------------------------------------------------
+# ============================================================
 # WHEEL ANIMATION
-# ------------------------------------------------------------
+# ============================================================
 
 transform battle_wheel_spin:
 
+    subpixel True
     transform_anchor True
-    anchor (0.5, 0.5)
 
     on show:
 
@@ -70,24 +48,24 @@ transform battle_wheel_spin:
 
     on hide:
 
-        easein 0.25:
+        easein 0.20:
             alpha 0.0
             rotate battle_spin_to
 
 
-# ------------------------------------------------------------
-# REUSABLE POINT BUTTON
-# ------------------------------------------------------------
+# ============================================================
+# REUSABLE BUTTON
+# ============================================================
 
-screen battle_point_button(button_text, px, py, button_action, enabled=True):
+screen battle_slot_button(button_text, px, py, button_action, enabled=True):
 
     textbutton button_text:
 
         xcenter px
         ycenter py
 
-        xsize 240
-        ysize 100
+        xsize 250
+        ysize 95
 
         background None
         hover_background None
@@ -96,35 +74,94 @@ screen battle_point_button(button_text, px, py, button_action, enabled=True):
         text_size 30
 
         text_color "#FFFFFF"
-        text_hover_color "#86D9FF"
-        text_insensitive_color "#59616D"
+        text_hover_color "#99CCFF"
+        text_insensitive_color "#606770"
 
-        text_align 0.5
         text_xalign 0.5
         text_yalign 0.5
 
         sensitive enabled
-
         action button_action
 
 
 # ============================================================
-# ACTUAL BATTLE COMMAND SCREEN
+# MOVE SLOT
 # ============================================================
 
-screen battle_command_menu():
+screen battle_move_slot(slot_number, px, py, move_list):
+
+    if slot_number < len(move_list):
+
+        use battle_slot_button(
+            move_list[slot_number],
+            px,
+            py,
+            Return(
+                (
+                    "move",
+                    battle_category,
+                    move_list[slot_number]
+                )
+            )
+        )
+
+    else:
+
+        use battle_slot_button(
+            "EMPTY",
+            px,
+            py,
+            NullAction(),
+            False
+        )
+
+
+# ============================================================
+# MAIN BATTLE COMMAND SCREEN
+# ============================================================
+
+screen battle_command_menu(enemy_name, enemy_hp, enemy_max_hp):
 
     modal True
 
+    $ shown_enemy_hp = max(0, enemy_hp)
+    $ shown_player_hp = max(0, player_hp)
+
+
+    # --------------------------------------------------------
+    # HP DISPLAY
+    # --------------------------------------------------------
+
+    frame:
+
+        xalign 0.5
+        ypos 35
+
+        padding (30, 18)
+
+        background "#101722E6"
+
+        vbox:
+
+            spacing 8
+
+            text "[enemy_name]  HP: [shown_enemy_hp] / [enemy_max_hp]":
+                size 28
+                xalign 0.5
+
+            text "Your HP: [shown_player_hp] / [player_max_hp]":
+                size 28
+                xalign 0.5
+
 
     # ========================================================
-    # MAIN MENU
+    # MAIN THREE-POINT MENU
     #
-    #       STORAGE
+    #                 FIGHT
     #
-    #             O ---- FIGHT
+    #                   O
     #
-    #          RUN
+    #           STORAGE     RUN
     #
     # ========================================================
 
@@ -135,55 +172,57 @@ screen battle_command_menu():
             at battle_wheel_spin
 
             xsize 900
-            ysize 900
+            ysize 600
 
-            xalign 0.5
-            yalign 0.5
+            xcenter 960
+            ycenter 690
 
             add "images/battle_ui/battle_main_wheel.svg"
 
 
-            # FIGHT
-            use battle_point_button(
+            # FIGHT - TOP
+
+            use battle_slot_button(
                 "FIGHT",
-                700,
                 450,
+                155,
                 [
-                    SetVariable("battle_spin_from", -36.0),
-                    SetVariable("battle_spin_to", 36.0),
+                    SetVariable("battle_spin_from", -28.0),
+                    SetVariable("battle_spin_to", 28.0),
                     SetVariable("battle_category", None),
                     SetVariable("battle_menu_level", "categories"),
                 ]
             )
 
 
-            # STORAGE
-            use battle_point_button(
+            # STORAGE - BOTTOM LEFT
+
+            use battle_slot_button(
                 "STORAGE",
                 300,
-                205,
-                Return(("command", "storage"))
+                440,
+                Show("battle_storage_menu")
             )
 
 
-            # RUN
-            use battle_point_button(
+            # RUN - BOTTOM RIGHT
+
+            use battle_slot_button(
                 "RUN",
-                300,
-                695,
-                Return(("command", "run"))
+                600,
+                440,
+                Return(("run",))
             )
-
 
 
     # ========================================================
     # FIVE-POINT STAR
     #
-    # Physical      Arts
+    #                 PHYSICAL
     #
-    # Back       O
+    #       BACK        O        ARTS
     #
-    # Skills        Magic
+    #            SKILLS     MAGIC
     #
     # ========================================================
 
@@ -194,43 +233,43 @@ screen battle_command_menu():
             at battle_wheel_spin
 
             xsize 900
-            ysize 900
+            ysize 600
 
-            xalign 0.5
-            yalign 0.5
+            xcenter 960
+            ycenter 690
 
             add "images/battle_ui/battle_star_wheel.svg"
 
 
             # ------------------------------------------------
-            # BACK
-            #
-            # This NEVER changes.
-            # It is always the LEFT point of the star.
+            # BACK - ALWAYS LEFT
             # ------------------------------------------------
 
-            use battle_point_button(
-                "BACK",
-                180,
-                450,
-                (
+            if battle_menu_level == "moves":
+
+                use battle_slot_button(
+                    "BACK",
+                    285,
+                    300,
                     [
                         SetVariable("battle_category", None),
                         SetVariable("battle_menu_level", "categories"),
                     ]
+                )
 
-                    if battle_menu_level == "moves"
+            else:
 
-                    else
-
+                use battle_slot_button(
+                    "BACK",
+                    285,
+                    300,
                     [
-                        SetVariable("battle_spin_from", 36.0),
-                        SetVariable("battle_spin_to", -36.0),
+                        SetVariable("battle_spin_from", 28.0),
+                        SetVariable("battle_spin_to", -28.0),
                         SetVariable("battle_category", None),
                         SetVariable("battle_menu_level", "main"),
                     ]
                 )
-            )
 
 
             # =================================================
@@ -240,11 +279,12 @@ screen battle_command_menu():
             if battle_menu_level == "categories":
 
 
-                # UPPER LEFT
-                use battle_point_button(
+                # TOP
+
+                use battle_slot_button(
                     "PHYSICAL",
-                    355,
-                    215,
+                    450,
+                    155,
                     [
                         SetVariable("battle_category", "physical"),
                         SetVariable("battle_menu_level", "moves"),
@@ -252,11 +292,12 @@ screen battle_command_menu():
                 )
 
 
-                # UPPER RIGHT
-                use battle_point_button(
+                # RIGHT
+
+                use battle_slot_button(
                     "ARTS",
-                    635,
-                    215,
+                    615,
+                    300,
                     [
                         SetVariable("battle_category", "arts"),
                         SetVariable("battle_menu_level", "moves"),
@@ -264,11 +305,12 @@ screen battle_command_menu():
                 )
 
 
-                # LOWER RIGHT
-                use battle_point_button(
+                # BOTTOM RIGHT
+
+                use battle_slot_button(
                     "MAGIC",
-                    635,
-                    685,
+                    600,
+                    440,
                     [
                         SetVariable("battle_category", "magic"),
                         SetVariable("battle_menu_level", "moves"),
@@ -276,11 +318,12 @@ screen battle_command_menu():
                 )
 
 
-                # LOWER LEFT
-                use battle_point_button(
+                # BOTTOM LEFT
+
+                use battle_slot_button(
                     "SKILLS",
-                    355,
-                    685,
+                    300,
+                    440,
                     [
                         SetVariable("battle_category", "skills"),
                         SetVariable("battle_menu_level", "moves"),
@@ -288,20 +331,15 @@ screen battle_command_menu():
                 )
 
 
-
             # =================================================
             # MOVE MODE
             #
-            # Same star.
-            # No spinning.
-            # Category names are simply replaced by moves.
-            # BACK stays where it is.
+            # STAR DOES NOT MOVE.
+            # ONLY THE FOUR LABELS CHANGE.
+            # BACK STAYS LEFT.
             # =================================================
 
             else:
-
-
-                # Figure out which four moves should be displayed.
 
                 if battle_category == "physical":
 
@@ -320,7 +358,13 @@ screen battle_command_menu():
 
                 elif battle_category == "skills":
 
-                    $ current_moves = battle_skill_moves
+                    if water_manipulation:
+
+                        $ current_moves = battle_skill_moves
+
+                    else:
+
+                        $ current_moves = []
 
 
                 else:
@@ -328,167 +372,92 @@ screen battle_command_menu():
                     $ current_moves = []
 
 
+                # TOP / MOVE 1
 
-                # ------------------------------------------------
-                # SLOT 1 - UPPER LEFT
-                # ------------------------------------------------
-
-                if len(current_moves) >= 1:
-
-                    use battle_point_button(
-                        current_moves[0],
-                        355,
-                        215,
-                        Return(
-                            (
-                                "move",
-                                battle_category,
-                                current_moves[0]
-                            )
-                        )
-                    )
-
-                else:
-
-                    use battle_point_button(
-                        "EMPTY",
-                        355,
-                        215,
-                        NullAction(),
-                        False
-                    )
+                use battle_move_slot(
+                    0,
+                    450,
+                    155,
+                    current_moves
+                )
 
 
-                # ------------------------------------------------
-                # SLOT 2 - UPPER RIGHT
-                # ------------------------------------------------
+                # RIGHT / MOVE 2
 
-                if len(current_moves) >= 2:
-
-                    use battle_point_button(
-                        current_moves[1],
-                        635,
-                        215,
-                        Return(
-                            (
-                                "move",
-                                battle_category,
-                                current_moves[1]
-                            )
-                        )
-                    )
-
-                else:
-
-                    use battle_point_button(
-                        "EMPTY",
-                        635,
-                        215,
-                        NullAction(),
-                        False
-                    )
+                use battle_move_slot(
+                    1,
+                    615,
+                    300,
+                    current_moves
+                )
 
 
-                # ------------------------------------------------
-                # SLOT 3 - LOWER RIGHT
-                # ------------------------------------------------
+                # BOTTOM RIGHT / MOVE 3
 
-                if len(current_moves) >= 3:
-
-                    use battle_point_button(
-                        current_moves[2],
-                        635,
-                        685,
-                        Return(
-                            (
-                                "move",
-                                battle_category,
-                                current_moves[2]
-                            )
-                        )
-                    )
-
-                else:
-
-                    use battle_point_button(
-                        "EMPTY",
-                        635,
-                        685,
-                        NullAction(),
-                        False
-                    )
+                use battle_move_slot(
+                    2,
+                    600,
+                    440,
+                    current_moves
+                )
 
 
-                # ------------------------------------------------
-                # SLOT 4 - LOWER LEFT
-                # ------------------------------------------------
+                # BOTTOM LEFT / MOVE 4
 
-                if len(current_moves) >= 4:
-
-                    use battle_point_button(
-                        current_moves[3],
-                        355,
-                        685,
-                        Return(
-                            (
-                                "move",
-                                battle_category,
-                                current_moves[3]
-                            )
-                        )
-                    )
-
-                else:
-
-                    use battle_point_button(
-                        "EMPTY",
-                        355,
-                        685,
-                        NullAction(),
-                        False
-                    )
-
+                use battle_move_slot(
+                    3,
+                    300,
+                    440,
+                    current_moves
+                )
 
 
 # ============================================================
-# TEST LABEL
+# STORAGE
 # ============================================================
 
-label test_battle_menu:
+screen battle_storage_menu():
 
-    # Always begin on the normal three-button wheel.
+    modal True
 
-    $ battle_menu_level = "main"
-    $ battle_category = None
-    $ battle_spin_from = 0.0
-    $ battle_spin_to = 0.0
+    frame:
 
+        xalign 0.5
+        yalign 0.5
 
-    $ battle_result = renpy.call_screen("battle_command_menu")
+        xsize 520
 
+        padding (40, 35)
 
-    # --------------------------------------------------------
-    # TEMPORARY TEST RESULTS
-    # --------------------------------------------------------
+        background "#101722F2"
 
-    if battle_result[0] == "move":
+        vbox:
 
-        $ chosen_category = battle_result[1]
-        $ chosen_move = battle_result[2]
+            xalign 0.5
+            spacing 20
 
-        "You selected [chosen_move]."
+            text "STORAGE":
+                size 36
+                xalign 0.5
 
-        "Category: [chosen_category]."
+            text "Magic Ore Clusters: [magic_ore_clusters]":
+                size 25
+                xalign 0.5
 
+            text "Hipokute Herb Clusters: [hipokute_herb_clusters]":
+                size 25
+                xalign 0.5
 
-    elif battle_result[1] == "storage":
+            null height 10
 
-        "You selected Storage."
+            text "No combat-usable stored items yet.":
+                size 22
+                xalign 0.5
 
+            null height 10
 
-    elif battle_result[1] == "run":
+            textbutton "BACK":
 
-        "You selected Run."
+                xalign 0.5
 
-
-    return
+                action Hide("battle_storage_menu")

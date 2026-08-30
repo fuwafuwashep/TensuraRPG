@@ -71,6 +71,9 @@ label veldora_first_meeting:
     scene cave_visible
     with dissolve
 
+    show veldora dragon at veldora_large
+    with dissolve
+
     n "I can see."
 
     pause 1.0

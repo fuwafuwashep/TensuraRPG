@@ -654,50 +654,15 @@ label thunder_frog_area:
 
 label thunder_frog_battle:
 
-    $ player_hp = player_max_hp
-    $ frog_hp = 24
 
-    n "The Thunder Frog attacks!"
-
-    while frog_hp > 0 and player_hp > 0:
-
-        n "Your HP: [player_hp] / [player_max_hp]"
-        n "Thunder Frog HP: [frog_hp] / 24"
-
-        menu:
-
-            "Basic Attack":
-
-                $ player_damage = renpy.random.randint(5, 8)
-                $ frog_hp -= player_damage
-
-                n "You deal [player_damage] damage!"
+    call battle_thunder_frog
 
 
-            "Run Away":
-
-                n "You escape from the Thunder Frog."
-
-                jump cave_branch_6
-
-
-        # Frog only attacks if it survived your attack.
-
-        if frog_hp > 0:
-
-            $ frog_damage = renpy.random.randint(2, 4)
-            $ player_hp -= frog_damage
-
-            n "The Thunder Frog attacks!"
-
-            n "You take [frog_damage] damage."
-
-
-    # --------------------------------------------------------
+    # ========================================================
     # PLAYER WON
-    # --------------------------------------------------------
+    # ========================================================
 
-    if frog_hp <= 0:
+    if _return == "won":
 
         n "The Thunder Frog has been defeated!"
 
@@ -709,20 +674,33 @@ label thunder_frog_battle:
         jump thunder_frog_area
 
 
-    # --------------------------------------------------------
-    # PLAYER LOST
-    # --------------------------------------------------------
+    # ========================================================
+    # PLAYER RAN AWAY
+    # ========================================================
 
-    if player_hp <= 0:
+    elif _return == "ran":
+
+        jump cave_branch_6
+
+
+    # ========================================================
+    # PLAYER LOST
+    # ========================================================
+
+    else:
 
         n "I can't continue..."
 
         menu:
 
             "Try the battle again":
+
                 jump thunder_frog_battle
 
+
             "Retreat to Branch 6":
+
                 $ player_hp = player_max_hp
+
                 jump cave_branch_6
 
