@@ -9,29 +9,46 @@
 
 label battle_thunder_frog:
 
+
+    # --------------------------------------------------------
+    # PLAYER
+    # --------------------------------------------------------
+
     $ player_hp = player_max_hp
+
+
+    # --------------------------------------------------------
+    # THUNDER FROG STATS
+    # --------------------------------------------------------
 
     $ frog_max_hp = 24
     $ frog_hp = frog_max_hp
 
     # 70% chance to successfully escape.
-    # Different enemies can have different chances later.
     $ frog_run_chance = 0.70
 
 
     n "The Thunder Frog attacks!"
 
 
+    # ========================================================
+    # MAIN BATTLE LOOP
+    # ========================================================
+
     while frog_hp > 0 and player_hp > 0:
 
 
-        # Every new turn begins at the three-point menu.
+        # ----------------------------------------------------
+        # RESET COMMAND MENU EACH TURN
+        # ----------------------------------------------------
 
         $ battle_menu_level = "main"
         $ battle_category = None
-        $ battle_spin_from = 0.0
-        $ battle_spin_to = 0.0
 
+
+        # ----------------------------------------------------
+        # OPEN BATTLE MENU
+        # ----------------------------------------------------
 
         window hide
 
@@ -53,15 +70,21 @@ label battle_thunder_frog:
 
         if battle_result[0] == "run":
 
+
             $ run_roll = renpy.random.random()
+
 
             if run_roll < frog_run_chance:
 
+
                 n "You escape from the Thunder Frog."
+
 
                 return "ran"
 
+
             else:
+
 
                 n "The Thunder Frog cuts off your escape!"
 
@@ -70,7 +93,8 @@ label battle_thunder_frog:
         # MOVE
         # ====================================================
 
-            elif battle_result[0] == "move":
+        elif battle_result[0] == "move":
+
 
             $ chosen_category = battle_result[1]
             $ chosen_move = battle_result[2]
@@ -82,14 +106,18 @@ label battle_thunder_frog:
 
             if chosen_move == "Basic Attack":
 
+
                 $ player_damage = renpy.random.randint(5, 8)
+
 
                 $ frog_hp = max(
                     0,
                     frog_hp - player_damage
                 )
 
+
                 n "You strike the Thunder Frog."
+
 
                 n "You deal [player_damage] damage!"
 
@@ -100,16 +128,21 @@ label battle_thunder_frog:
 
             elif chosen_move == "Water Blade":
 
+
                 $ player_damage = renpy.random.randint(6, 9)
+
 
                 $ frog_hp = max(
                     0,
                     frog_hp - player_damage
                 )
 
+
                 n "Water gathers and forms into a sharp blade."
 
+
                 n "The Water Blade strikes the Thunder Frog."
+
 
                 n "You deal [player_damage] damage!"
 
@@ -120,6 +153,7 @@ label battle_thunder_frog:
 
             else:
 
+
                 n "[chosen_move] has not been programmed yet."
 
 
@@ -129,18 +163,26 @@ label battle_thunder_frog:
 
         if frog_hp > 0:
 
+
             $ frog_damage = renpy.random.randint(2, 4)
 
 
-            # Electricity Resistance helps against this frog.
+            # ------------------------------------------------
+            # ELECTRICITY RESISTANCE
+            # ------------------------------------------------
 
             if electricity_resistance:
+
 
                 $ frog_damage = max(
                     1,
                     frog_damage - 1
                 )
 
+
+            # ------------------------------------------------
+            # DAMAGE PLAYER
+            # ------------------------------------------------
 
             $ player_hp = max(
                 0,
@@ -150,15 +192,27 @@ label battle_thunder_frog:
 
             n "The Thunder Frog attacks!"
 
+
             n "You take [frog_damage] damage."
 
 
     # ========================================================
-    # RESULT
+    # BATTLE RESULT
     # ========================================================
+
+
+    # --------------------------------------------------------
+    # PLAYER WON
+    # --------------------------------------------------------
 
     if frog_hp <= 0:
 
+
         return "won"
+
+
+    # --------------------------------------------------------
+    # PLAYER LOST
+    # --------------------------------------------------------
 
     return "lost"
