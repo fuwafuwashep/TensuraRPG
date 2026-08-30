@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="300"
+     height="90"
+     viewBox="0 0 300 90">
+
+    <polygon
+        points="
+        38,4
+        262,4
+        296,45
+        262,86
+        38,86
+        4,45
+        "
+        fill="#D6D6D6"
+        stroke="#777777"
+        stroke-width="4"
+        stroke-linejoin="round"
+    />
+
+</svg>

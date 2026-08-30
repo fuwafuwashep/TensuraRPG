@@ -204,30 +204,60 @@ style input:
 ##
 ## https://www.renpy.org/doc/html/screen_special.html#choice
 
+## Choice screen ###############################################################
+
 screen choice(items):
+
     style_prefix "choice"
 
-    vbox:
-        for i in items:
-            textbutton i.caption action i.action
+    frame:
+
+        xalign 0.97
+        yalign 0.76
+
+        xsize 470
+
+        background "#202020B8"
+
+        padding (12, 12)
+
+        vbox:
+
+            spacing 8
+
+            for i in items:
+
+                textbutton i.caption action i.action
 
 
-style choice_vbox is vbox
 style choice_button is button
+
 style choice_button_text is button_text
 
-style choice_vbox:
-    xalign 0.5
-    ypos 405
-    yanchor 0.5
 
-    spacing gui.choice_spacing
+style choice_button:
 
-style choice_button is default:
-    properties gui.button_properties("choice_button")
+    xsize 446
+    yminimum 58
 
-style choice_button_text is default:
-    properties gui.text_properties("choice_button")
+    background "#D6D6D6E6"
+    hover_background "#EEEEEEF2"
+
+    left_padding 20
+    right_padding 20
+    top_padding 10
+    bottom_padding 10
+
+
+style choice_button_text:
+
+    size 26
+
+    color "#202020"
+    hover_color "#000000"
+
+    xalign 0.0
+    yalign 0.5
 
 
 ## Quick Menu screen ###########################################################

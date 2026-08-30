@@ -70,7 +70,7 @@ label battle_thunder_frog:
         # MOVE
         # ====================================================
 
-        elif battle_result[0] == "move":
+            elif battle_result[0] == "move":
 
             $ chosen_category = battle_result[1]
             $ chosen_move = battle_result[2]
@@ -95,10 +95,10 @@ label battle_thunder_frog:
 
 
             # ------------------------------------------------
-            # WATER MANIPULATION
+            # WATER BLADE
             # ------------------------------------------------
 
-            elif chosen_move == "Water Manipulation":
+            elif chosen_move == "Water Blade":
 
                 $ player_damage = renpy.random.randint(6, 9)
 
@@ -107,7 +107,9 @@ label battle_thunder_frog:
                     frog_hp - player_damage
                 )
 
-                n "You manipulate the surrounding water and launch it at the Thunder Frog."
+                n "Water gathers and forms into a sharp blade."
+
+                n "The Water Blade strikes the Thunder Frog."
 
                 n "You deal [player_damage] damage!"
 
