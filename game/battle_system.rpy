@@ -54,10 +54,11 @@ label battle_thunder_frog:
 
 
         $ battle_result = renpy.call_screen(
-            "battle_command_menu",
-            enemy_name="Thunder Frog",
-            enemy_hp=frog_hp,
-            enemy_max_hp=frog_max_hp
+        "battle_command_menu",
+        enemy_name="Thunder Frog",
+        enemy_hp=frog_hp,
+        enemy_max_hp=frog_max_hp,
+        enemy_sprite="images/battle/electricfrog.png"
         )
 
 

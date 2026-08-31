@@ -267,23 +267,119 @@ style choice_button_text:
 
 screen quick_menu():
 
-    ## Ensure this appears on top of other screens.
     zorder 100
 
-    if quick_menu:
+
+    # Do not display the exploration HUD during battle.
+    if quick_menu and not renpy.get_screen("battle_command_menu"):
+
+
+        # ====================================================
+        # PLAYER STATUS - TOP LEFT
+        # ====================================================
+
+        frame:
+
+            xpos 20
+            ypos 20
+
+            padding (15, 10)
+
+            background "#D6D6D6D9"
+
+
+            hbox:
+
+                spacing 15
+
+
+                # Placeholder player icon.
+
+                frame:
+
+                    xsize 58
+                    ysize 58
+
+                    background "#BEBEBE"
+
+                    text "P":
+
+                        size 30
+                        color "#202020"
+
+                        xalign 0.5
+                        yalign 0.5
+
+
+                vbox:
+
+                    spacing 3
+
+                    text "HP":
+
+                        size 18
+                        color "#202020"
+
+
+                    text "[player_hp] / [player_max_hp]":
+
+                        size 22
+                        color "#202020"
+
+
+
+        # ====================================================
+        # SMALL EXPLORATION ICONS - TOP RIGHT
+        # ====================================================
 
         hbox:
-            style_prefix "quick"
-            style "quick_menu"
 
-            textbutton _("Back") action Rollback()
-            textbutton _("History") action ShowMenu('history')
-            textbutton _("Skip") action Skip() alternate Skip(fast=True, confirm=True)
-            textbutton _("Auto") action Preference("auto-forward", "toggle")
-            textbutton _("Save") action ShowMenu('save')
-            textbutton _("Q.Save") action QuickSave()
-            textbutton _("Q.Load") action QuickLoad()
-            textbutton _("Prefs") action ShowMenu('preferences')
+            xalign 0.985
+            ypos 20
+
+            spacing 8
+
+
+            textbutton "INV":
+
+                xsize 70
+                ysize 58
+
+                background "#D6D6D6E6"
+                hover_background "#EEEEEEF2"
+
+                text_color "#202020"
+                text_hover_color "#000000"
+
+                action Show("storage_menu")
+
+
+            textbutton "SKL":
+
+                xsize 70
+                ysize 58
+
+                background "#D6D6D6E6"
+                hover_background "#EEEEEEF2"
+
+                text_color "#202020"
+                text_hover_color "#000000"
+
+                action Show("skills_menu")
+
+
+            textbutton "SET":
+
+                xsize 70
+                ysize 58
+
+                background "#D6D6D6E6"
+                hover_background "#EEEEEEF2"
+
+                text_color "#202020"
+                text_hover_color "#000000"
+
+                action Show("loadout_menu")
 
 
 ## This code ensures that the quick_menu screen is displayed in-game, whenever

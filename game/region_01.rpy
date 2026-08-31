@@ -483,21 +483,17 @@ label cave_branch_2:
 
 
 # ============================================================
-# LOCKED PART 2
+# PART 2
 # ============================================================
 
 label cave_part_2_locked:
-
 
     call update_cave_view("S")
 
 
     n "This pathway leads deeper into the cave."
 
-    n "Part 2 has not been implemented yet."
-
-
-    jump cave_branch_2
+    jump cave_part_2_start
 
 
 # ============================================================
