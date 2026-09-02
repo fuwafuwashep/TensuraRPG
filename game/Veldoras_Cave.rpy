@@ -129,8 +129,8 @@ default hipokute_herb_clusters = 0
 # COMBAT
 # ============================================================
 
-default player_max_hp = 30
-default player_hp = 30
+default player_max_hp = 300
+default player_hp = 300
 
 
 # ============================================================
@@ -954,7 +954,7 @@ label tempest_serpent_area:
 
             "Fight the Tempest Serpent":
 
-                call battle_cave_enemy("tempest_serpent")
+                call battle_enemy("tempest_serpent")
 
                 if _return == "won":
 
@@ -1047,7 +1047,7 @@ label black_spider_area:
 
             "Fight the Black Spider":
 
-                call battle_cave_enemy("black_spider")
+                call battle_enemy("black_spider")
 
                 if _return == "won":
 
@@ -1164,7 +1164,7 @@ label giant_bat_area:
 
             "Fight the Giant Bat":
 
-                call battle_cave_enemy("giant_bat")
+                call battle_enemy("giant_bat")
 
                 if _return == "won":
 
@@ -1271,7 +1271,7 @@ label evil_centipede_area:
 
             "Fight the Evil Centipede":
 
-                call battle_cave_enemy("evil_centipede")
+                call battle_enemy("evil_centipede")
 
                 if _return == "won":
 
@@ -1337,7 +1337,7 @@ label armorsaurus_area:
 
             "Fight the Armorsaurus":
 
-                call battle_cave_enemy("armorsaurus")
+                call battle_enemy("armorsaurus")
 
                 if _return == "won":
 
@@ -1392,6 +1392,8 @@ label veldora_cave_exit:
     scene cave_exit_placeholder
     with dissolve
 
+    $ current_region = "Veldoras_Cave"
+
     n "The tunnel begins to open up."
 
     n "Light is coming from somewhere ahead."
@@ -1400,11 +1402,13 @@ label veldora_cave_exit:
 
     menu:
 
-        "Go back":
+        "Go back into Veldora's Cave":
+
             jump part2_final_branch
 
-        "Continue":
 
-            n "The area beyond Veldora's Cave has not been implemented yet."
+        "Step outside":
 
-            jump veldora_cave_exit
+            $ current_region = "West_Jura"
+
+            jump west_jura_start

@@ -815,29 +815,39 @@ label battle_enemy(enemy_key, predator_allowed=True):
             $ enemy_damage_reduction_turns -= 1
 
 
-    # ========================================================
-    # RESULT
-    # ========================================================
+    # ============================================================
+    # BATTLE RESULT
+    # ============================================================
 
     if enemy_hp <= 0:
 
-        # If Predate was not used in combat, Predator absorbs the
-        # defeated monster at 80% effectiveness. Direwolf Leader
-        # story fights can disable Predator entirely.
         if predator and predator_allowed and not last_battle_predated:
 
-            $ last_battle_predated = True
-            $ last_predation_efficiency = 0.80
-            $ gained_skills = grant_enemy_skills(enemy_key)
+            menu:
 
-            n "Predator absorbs the defeated [enemy_name]."
-            n "You absorb 80% of its remaining magicules."
+                "Predate the defeated monster":
 
-            if gained_skills:
+                    $ last_battle_predated = True
+                    $ last_predation_efficiency = 0.80
 
-                $ gained_text = ", ".join(gained_skills)
-                n "Acquired: [gained_text]."
+                    $ gained_skills = grant_enemy_skills(enemy_key)
+
+                    n "Predator consumes the defeated [enemy_name]."
+
+                    n "You absorb 80% of its magicules."
+
+                    if gained_skills:
+
+                        $ gained_text = ", ".join(gained_skills)
+
+                        n "Acquired: [gained_text]."
+
+
+                "Leave the monster":
+
+                    pass
+
 
         return "won"
 
-    return "lost"
+        return "lost"
