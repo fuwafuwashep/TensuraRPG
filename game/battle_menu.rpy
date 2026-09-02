@@ -287,7 +287,7 @@ screen battle_command_menu(
     # PLAYER SPRITE
     # ========================================================
 
-    add "images/battle/slimebattle.png" at battle_player_sprite_position
+    add "images/characters/yourself/slimebattle.png" at battle_player_sprite_position
 
 
     # ========================================================

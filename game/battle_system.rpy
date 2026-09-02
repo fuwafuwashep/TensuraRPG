@@ -58,7 +58,7 @@ label battle_thunder_frog:
         enemy_name="Thunder Frog",
         enemy_hp=frog_hp,
         enemy_max_hp=frog_max_hp,
-        enemy_sprite="images/battle/electricfrog.png"
+        enemy_sprite="images/enemies/electricfrog.png"
         )
 
 
