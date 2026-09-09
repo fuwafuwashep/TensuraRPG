@@ -125,14 +125,22 @@ screen battle_status_meter(
     $ fill_width = int(float(safe_current) / float(safe_maximum) * meter_width)
 
     if fill_width > 0:
-
-        add Transform(
+        $ meter_fill = Frame(
+            Transform(
             battle_ui_status_fill,
-            xysize=(fill_width, meter_height),
             matrixcolor=TintMatrix(meter_color)
-        ):
+        ),
+        9,
+        0,
+        9,
+        0
+        )
+        
+        add meter_fill:
             xpos meter_x
             ypos meter_y
+            xsize fill_width
+            ysize meter_height
 
 
 # ============================================================
