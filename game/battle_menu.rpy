@@ -53,6 +53,32 @@ define battle_ui_status_fill = "images/battle_ui/status_fill.svg"
 
 default battle_allies = []
 
+# ============================================================
+# Slide Assets
+# ============================================================
+
+default battle_turn_queue = []
+default battle_turn_cycle = []
+default battle_turn_cycle_index = 0
+
+default battle_turn_order_shifting = False
+default battle_turn_old_queue = []
+
+define battle_turn_x_positions = [
+    -22,
+    -67,
+    -112,
+    -157,
+    -202,
+]
+
+define battle_turn_y_positions = [
+    -10,
+    60,
+    120,
+    180,
+    240,
+]
 
 # ============================================================
 # BATTLE SPRITE POSITIONS
@@ -162,65 +188,251 @@ screen battle_command_button(
             size 27
             color "#171717"
 
+# ============================================================
+# TURN ORDER QUEUE LOGIC
+# ============================================================
+
+init python:
+
+    import renpy.store as store
+
+    def setup_battle_turn_queue(enemy_name):
+
+        if enemy_goes_first():
+            cycle = (
+                [enemy_name]
+                + list(store.battle_allies)
+                + [store.battle_player_name]
+            )
+
+        else:
+            cycle = (
+                [store.battle_player_name]
+                + list(store.battle_allies)
+                + [enemy_name]
+            )
+
+        store.battle_turn_cycle = cycle
+        store.battle_turn_cycle_index = 0
+
+        store.battle_turn_queue = [
+            cycle[i % len(cycle)]
+            for i in range(5)
+        ]
+
+        store.battle_turn_old_queue = []
+        store.battle_turn_order_shifting = False
+
+
+    def prepare_battle_turn_shift():
+
+        if not store.battle_turn_cycle:
+            return
+
+        store.battle_turn_old_queue = list(
+            store.battle_turn_queue
+        )
+
+        store.battle_turn_cycle_index = (
+            store.battle_turn_cycle_index + 1
+        ) % len(store.battle_turn_cycle)
+
+        start = store.battle_turn_cycle_index
+
+        store.battle_turn_queue = [
+            store.battle_turn_cycle[
+                (start + i) % len(store.battle_turn_cycle)
+            ]
+            for i in range(5)
+        ]
+
+        store.battle_turn_order_shifting = True
+
+transform turn_order_first_exit:
+
+    xoffset 0
+    alpha 1.0
+
+    linear 0.30 xoffset -500 alpha 0.0
+
+
+transform turn_order_move_up(dx, dy):
+
+    xoffset dx
+    yoffset dy
+
+    linear 0.30 xoffset 0 yoffset 0
+
+
+transform turn_order_new_appear:
+
+    alpha 0.0
+    xoffset 35
+    yoffset 15
+
+    linear 0.30 alpha 1.0 xoffset 0 yoffset 0
 
 # ============================================================
 # TURN ORDER
 # ============================================================
+screen battle_turn_card(character_name, first=False):
+
+    if first:
+
+        fixed:
+
+            xsize 450
+            ysize 150
+
+            add battle_ui_first_status
+
+            text str(character_name):
+
+                xcenter 285
+                ycenter 75
+
+                xsize 245
+
+                text_align 0.5
+
+                size 25
+                bold True
+
+                color "#F4F4F4"
+
+                outlines [
+                    (2, "#000000AA", 0, 0)
+                ]
+
+    else:
+
+        fixed:
+
+            xsize 350
+            ysize 100
+
+            add battle_ui_other_status
+
+            text str(character_name):
+
+                xcenter 185
+                ycenter 50
+
+                xsize 270
+
+                text_align 0.5
+
+                size 22
+                bold True
+
+                color "#F4F4F4"
+
+                outlines [
+                    (2, "#000000AA", 0, 0)
+                ]
 
 screen battle_turn_order(enemy_name):
-
-    $ enemy_first = enemy_goes_first()
-
-    if enemy_first:
-        $ order_names = [enemy_name] + list(battle_allies) + [battle_player_name]
-    else:
-        $ order_names = [battle_player_name] + list(battle_allies) + [enemy_name]
-
-    $ order_names = order_names[:5]
 
     fixed:
 
         xpos 0
-        ypos -10
+        ypos 0
 
         xsize 450
         ysize 430
 
-        for order_index, character_name in enumerate(order_names):
 
-            if order_index == 0:
+        if not battle_turn_order_shifting:
 
-                add battle_ui_first_status:
-                    xpos 0
-                    ypos 0
+            for i, character_name in enumerate(battle_turn_queue):
 
-                text str(character_name):
-                    xcenter 285
-                    ycenter 75
-                    xsize 245
-                    text_align 0.5
-                    size 25
-                    bold True
-                    color "#F4F4F4"
-                    outlines [(2, "#000000AA", 0, 0)]
+                $ slot_x = battle_turn_x_positions[i]
+                $ slot_y = battle_turn_y_positions[i]
 
-            else:
+                fixed:
 
-                $ other_y = 72 + ((order_index - 1) * 58)
+                    xpos slot_x
+                    ypos slot_y
 
-                add battle_ui_other_status:
-                    xpos 0
-                    ypos other_y
+                    if i == 0:
 
-                text str(character_name):
-                    xcenter 185
-                    ycenter other_y + 50
-                    xsize 270
-                    text_align 0.5
-                    size 22
-                    bold True
-                    color "#F4F4F4"
-                    outlines [(2, "#000000AA", 0, 0)]
+                        use battle_turn_card(
+                            character_name,
+                            True
+                        )
+
+                    else:
+
+                        use battle_turn_card(
+                            character_name,
+                            False
+                        )
+
+
+        else:
+
+            fixed:
+
+                xpos battle_turn_x_positions[0]
+                ypos battle_turn_y_positions[0]
+
+                at turn_order_first_exit
+
+                use battle_turn_card(
+                    battle_turn_old_queue[0],
+                    True
+                )
+
+
+            for old_index in range(1, 5):
+
+                $ new_index = old_index - 1
+
+                $ old_x = battle_turn_x_positions[old_index]
+                $ old_y = battle_turn_y_positions[old_index]
+
+                $ new_x = battle_turn_x_positions[new_index]
+                $ new_y = battle_turn_y_positions[new_index]
+
+                $ move_dx = old_x - new_x
+                $ move_dy = old_y - new_y
+
+                fixed:
+
+                    xpos new_x
+                    ypos new_y
+
+                    at turn_order_move_up(
+                        move_dx,
+                        move_dy
+                    )
+
+                    if new_index == 0:
+
+                        use battle_turn_card(
+                            battle_turn_old_queue[old_index],
+                            True
+                        )
+
+                    else:
+
+                        use battle_turn_card(
+                            battle_turn_old_queue[old_index],
+                            False
+                        )
+
+
+            fixed:
+
+                xpos battle_turn_x_positions[4]
+                ypos battle_turn_y_positions[4]
+
+                at turn_order_new_appear
+
+                use battle_turn_card(
+                    battle_turn_queue[4],
+                    False
+                )
 
 
 # ============================================================
@@ -545,9 +757,9 @@ screen battle_command_menu(
                 $ current_category_name = "PHYSICAL"
                 $ current_category_color = battle_color_physical
 
-                use battle_move_button(current_moves, 0, 230, 145, current_category_color, enemy_hp, predator_allowed)
-                use battle_move_button(current_moves, 1, 590, 145, current_category_color, enemy_hp, predator_allowed)
-                use battle_move_button(current_moves, 2, 410, 60, current_category_color, enemy_hp, predator_allowed)
+                use battle_move_button(current_moves, 0, 150, 100, current_category_color, enemy_hp, predator_allowed)
+                use battle_move_button(current_moves, 1, 650, 100, current_category_color, enemy_hp, predator_allowed)
+                use battle_move_button(current_moves, 2, 400, 50, current_category_color, enemy_hp, predator_allowed)
 
 
             elif battle_category == "aura":
@@ -774,6 +986,24 @@ screen battle_allies_menu():
                                 color "#888888"
                                 yalign 0.5
 
+# ============================================================
+# ADVANCE TURN ORDER
+# ============================================================
+
+label advance_battle_turn_order:
+
+    $ prepare_battle_turn_shift()
+
+    $ renpy.restart_interaction()
+
+    $ renpy.pause(0.30, hard=True)
+
+    $ battle_turn_order_shifting = False
+    $ battle_turn_old_queue = []
+
+    $ renpy.restart_interaction()
+
+    return
 
 # ============================================================
 # PERSISTENT BATTLE PRESENTATION

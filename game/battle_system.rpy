@@ -341,6 +341,8 @@ label battle_enemy_turns(enemy_key, predator_allowed=True):
     $ player_skip_turn = False
     $ player_restrained = False
 
+    $ setup_battle_turn_queue(enemy_name)
+    
     show screen battle_stage
 
     n "[enemy_name] attacks!"
@@ -386,6 +388,7 @@ label battle_enemy_turns(enemy_key, predator_allowed=True):
             $ enemy_acted_this_round = True
             if player_hp <= 0:
                 return "lost"
+            call advance_battle_turn_order
 
         if player_skip_turn:
 
@@ -719,7 +722,9 @@ label battle_enemy_turns(enemy_key, predator_allowed=True):
 
                     n "[chosen_move] has not been programmed yet."
 
-
+        if enemy_hp > 0 and player_hp > 0:
+            call advance_battle_turn_order
+        
         # ====================================================
         # ENEMY DEFEATED BY PLAYER TURN
         # ====================================================
@@ -763,7 +768,8 @@ label battle_enemy_turns(enemy_key, predator_allowed=True):
 
         if not enemy_acted_this_round:
             call battle_enemy_take_turn
-
+            if player_hp > 0:
+                call advance_battle_turn_order
         if player_hp > 0:
             $ ally_recovery = battle_assistance()
             if ally_recovery:
