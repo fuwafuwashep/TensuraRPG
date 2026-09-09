@@ -8,4 +8,4 @@ label start:
 
     call opening_cutscene
 
-    jump veldoras_cave_start
+    jump stormdragons_cave_start

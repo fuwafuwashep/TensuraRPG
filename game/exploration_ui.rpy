@@ -11,9 +11,10 @@ screen storage_menu():
     tag rpg_panel
     modal True
     zorder 200
-    key "game_menu" action Hide("storage_menu")
-    use rpg_panel("Inventory • Stomach", Hide("storage_menu")):
-        use rpg_inventory_contents()
+    on "show" action Function(migrate_inventory_grid)
+    on "hide" action Function(inventory_close_cleanup)
+    key "game_menu" action [Function(inventory_close_cleanup), Hide("storage_menu")]
+    use inventory_grid_screen([Function(inventory_close_cleanup), Hide("storage_menu")])
 
 
 screen storage_entry(item_name, amount):
@@ -409,3 +410,329 @@ screen equipped_move_row(move_name):
 
                 action Function(unequip_move, move_name)
                 sensitive move_name != "Basic Attack"
+
+
+# ============================================================
+# INVENTORY / CRAFTING SCREEN
+# ============================================================
+
+screen inventory_grid_screen(close_action):
+
+    modal True
+    zorder 250
+
+    key "K_z" action Function(inventory_split_held_stack)
+
+    add "#05080ED9"
+
+    frame:
+        align (0.5, 0.5)
+        xysize (1800, 1010)
+        background "#101A24F7"
+        padding (28, 24)
+
+        fixed:
+
+            text "INVENTORY • STOMACH":
+                xpos 30
+                ypos 10
+                size 42
+                bold True
+                color "#EDF6F4"
+
+            textbutton "Inventory":
+                xpos 650
+                ypos 8
+                xsize 180
+                ysize 55
+                action SetVariable("inventory_ui_tab", "inventory")
+
+            textbutton "Craft":
+                xpos 845
+                ypos 8
+                xsize 180
+                ysize 55
+                action SetVariable("inventory_ui_tab", "craft")
+
+            textbutton "X":
+                xpos 1670
+                ypos 5
+                xsize 60
+                ysize 55
+                action close_action
+
+
+            if inventory_ui_tab == "inventory":
+
+                $ _occupied = inventory_occupied_map()
+
+                draggroup:
+
+                    # All 98 droppable cells.
+                    for slot_index in range(INVENTORY_SLOT_COUNT):
+                        $ slot_col = slot_index % INVENTORY_COLS
+                        $ slot_row = slot_index // INVENTORY_COLS
+                        $ slot_x = 85 + slot_col * (INVENTORY_SLOT_SIZE + INVENTORY_SLOT_GAP)
+                        $ slot_y = 105 + slot_row * (INVENTORY_SLOT_SIZE + INVENTORY_SLOT_GAP)
+
+                        drag:
+                            drag_name ("inv_target_%d" % slot_index)
+                            draggable False
+                            droppable True
+                            xpos slot_x
+                            ypos slot_y
+                            xsize INVENTORY_SLOT_SIZE
+                            ysize INVENTORY_SLOT_SIZE
+                            add "images/inventory_ui/inventory_slot.svg"
+
+                    # Only anchor cells draw items; large items span several cells.
+                    for anchor, entry in enumerate(inventory_slots):
+                        if entry is not None:
+                            $ item_id = entry["item"]
+                            $ item_name = inventory_item_name(item_id)
+                            $ footprint_w, footprint_h = inventory_item_footprint(item_id)
+                            $ anchor_col = anchor % INVENTORY_COLS
+                            $ anchor_row = anchor // INVENTORY_COLS
+                            $ item_x = 85 + anchor_col * (INVENTORY_SLOT_SIZE + INVENTORY_SLOT_GAP)
+                            $ item_y = 105 + anchor_row * (INVENTORY_SLOT_SIZE + INVENTORY_SLOT_GAP)
+                            $ item_w = footprint_w * INVENTORY_SLOT_SIZE + (footprint_w - 1) * INVENTORY_SLOT_GAP
+                            $ item_h = footprint_h * INVENTORY_SLOT_SIZE + (footprint_h - 1) * INVENTORY_SLOT_GAP
+                            $ item_qty = entry["qty"]
+
+                            drag:
+                                drag_name ("inv_item_%d" % anchor)
+                                draggable True
+                                droppable False
+                                drag_raise True
+                                mouse_drop True
+                                activated inventory_drag_activated
+                                dragged inventory_item_dragged
+                                xpos item_x
+                                ypos item_y
+                                xsize item_w
+                                ysize item_h
+
+                                frame:
+                                    xsize item_w
+                                    ysize item_h
+                                    background Frame("images/inventory_ui/inventory_item.svg", 16, 16, 16, 16)
+                                    padding (8, 8)
+
+                                    text "[item_name]\n×[item_qty]":
+                                        xalign 0.5
+                                        yalign 0.5
+                                        text_align 0.5
+                                        size 20 if footprint_w == 1 else 28
+                                        color "#F2F7F8"
+
+                text "Drag and drop to move stacks. While holding a stack, press Z to split it in half. Odd stacks give the larger half to your mouse (35 → 18 held, 17 left).":
+                    xpos 85
+                    ypos 875
+                    xsize 1510
+                    size 20
+                    color "#B8CBD3"
+
+
+            else:
+
+                text "CRAFTING • Predator":
+                    xpos 80
+                    ypos 100
+                    size 32
+                    color "#9EDCCA"
+
+                text "Drag Hipoutke Herb or Magic Ore from the material tray into any crafting square.":
+                    xpos 80
+                    ypos 145
+                    xsize 1100
+                    size 21
+                    color "#C9D8DD"
+
+                # Material tray background. The draggable stacks themselves live
+                # in the DragGroup below.
+                frame:
+                    xpos 80
+                    ypos 210
+                    xsize 390
+                    ysize 610
+                    background "#172B35"
+                    padding (18, 18)
+
+                    text "MATERIALS":
+                        xpos 10
+                        ypos 5
+                        size 27
+                        color "#EDF6F4"
+
+                draggroup:
+
+                    # Material tray: real inventory stacks, shown here as draggable sources.
+                    $ material_row = 0
+                    for anchor, entry in enumerate(inventory_slots):
+                        if entry is not None and entry["item"] in ("hipokute", "magic_ore"):
+                            $ tray_name = inventory_item_name(entry["item"])
+                            $ tray_qty = entry["qty"]
+                            $ tray_y = 275 + material_row * 125
+
+                            drag:
+                                drag_name ("inv_item_%d" % anchor)
+                                draggable True
+                                droppable False
+                                drag_raise True
+                                mouse_drop True
+                                activated inventory_drag_activated
+                                dragged inventory_item_dragged
+                                xpos 110
+                                ypos tray_y
+                                xsize 330
+                                ysize 100
+
+                                frame:
+                                    xsize 330
+                                    ysize 100
+                                    background Frame("images/inventory_ui/inventory_item.svg", 16, 16, 16, 16)
+                                    text "[tray_name]\n×[tray_qty]":
+                                        align (0.5, 0.5)
+                                        text_align 0.5
+                                        size 22
+                                        color "#F2F7F8"
+
+                            $ material_row += 1
+
+                    # 3 x 3 crafting grid.
+                    for craft_index in range(9):
+                        $ craft_col = craft_index % 3
+                        $ craft_row = craft_index // 3
+                        $ craft_x = 610 + craft_col * 115
+                        $ craft_y = 265 + craft_row * 115
+
+                        drag:
+                            drag_name ("craft_target_%d" % craft_index)
+                            draggable False
+                            droppable True
+                            xpos craft_x
+                            ypos craft_y
+                            xsize 100
+                            ysize 100
+                            add "images/inventory_ui/craft_slot.svg"
+
+                    for craft_index, entry in enumerate(craft_slots):
+                        if entry is not None:
+                            $ craft_col = craft_index % 3
+                            $ craft_row = craft_index // 3
+                            $ craft_x = 610 + craft_col * 115
+                            $ craft_y = 265 + craft_row * 115
+                            $ craft_name = inventory_item_name(entry["item"])
+                            $ craft_qty = entry["qty"]
+
+                            drag:
+                                drag_name ("craft_item_%d" % craft_index)
+                                draggable True
+                                droppable False
+                                drag_raise True
+                                mouse_drop True
+                                activated inventory_drag_activated
+                                dragged inventory_item_dragged
+                                xpos craft_x
+                                ypos craft_y
+                                xsize 100
+                                ysize 100
+
+                                frame:
+                                    xsize 100
+                                    ysize 100
+                                    background Frame("images/inventory_ui/inventory_item.svg", 16, 16, 16, 16)
+                                    text "[craft_name]\n×[craft_qty]":
+                                        align (0.5, 0.5)
+                                        text_align 0.5
+                                        size 16
+                                        color "#F2F7F8"
+
+                $ recipe_info = crafting_input_summary()
+
+                frame:
+                    xpos 1000
+                    ypos 250
+                    xsize 360
+                    ysize 360
+                    background "#172B35"
+                    padding (22, 20)
+
+                    vbox:
+                        spacing 14
+
+                        text "OUTPUT":
+                            size 27
+                            color "#EDF6F4"
+
+                        if recipe_info is not None:
+                            $ recipe_input, recipe_output, recipe_available = recipe_info
+                            $ recipe_output_name = inventory_item_name(recipe_output)
+
+                            text "[recipe_output_name]":
+                                size 28
+                                color "#9EDCCA"
+
+                            text "Available: [recipe_available]":
+                                size 21
+                                color "#C8D7DC"
+
+                            hbox:
+                                spacing 8
+                                textbutton "-" action Function(set_craft_quantity, craft_quantity - 1)
+                                text "[craft_quantity]" size 25 yalign 0.5
+                                textbutton "+" action Function(set_craft_quantity, craft_quantity + 1)
+
+                            textbutton "Craft Selected":
+                                xfill True
+                                action Function(craft_output, craft_quantity)
+
+                            textbutton "Craft All":
+                                xfill True
+                                action Function(craft_output, recipe_available)
+
+                        else:
+                            text "No valid recipe":
+                                size 23
+                                color "#97AAB1"
+
+                        textbutton "Return All Materials":
+                            xfill True
+                            action Function(return_all_craft_materials)
+
+                textbutton "Recipes":
+                    xpos 1425
+                    ypos 245
+                    xsize 250
+                    ysize 58
+                    action ToggleVariable("inventory_show_recipes")
+
+                if inventory_show_recipes:
+                    frame:
+                        xpos 1370
+                        ypos 320
+                        xsize 360
+                        ysize 320
+                        background "#172B35F5"
+                        padding (20, 18)
+
+                        vbox:
+                            spacing 16
+                            text "RECIPES":
+                                size 28
+                                color "#EDF6F4"
+                            text "Hipoutke Herb anywhere\n→ Healing Blob ×1":
+                                size 22
+                                color "#9EDCCA"
+                            text "Magic Ore anywhere\n→ Magisteel Cluster ×1":
+                                size 22
+                                color "#9EDCCA"
+                            text "One material crafts one output. Use Craft Selected or Craft All.":
+                                size 18
+                                color "#B8CBD3"
+
+                text "Z also splits a stack while you are dragging it here.":
+                    xpos 610
+                    ypos 720
+                    size 20
+                    color "#B8CBD3"
