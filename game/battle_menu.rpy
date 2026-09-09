@@ -5,6 +5,7 @@
 
 default battle_menu_level = "main"
 default battle_category = None
+default battle_player_name = "RIMURU"
 
 
 # ============================================================
@@ -22,6 +23,28 @@ define battle_color_physical = "#D9D9D9"
 define battle_color_aura = "#9B9B9B"
 define battle_color_magic = "#D7C1EE"
 define battle_color_skills = "#A184C4"
+
+
+# ============================================================
+# STATUS COLORS
+# ============================================================
+
+define battle_hp_color = "#45D884"
+define battle_mp_color = "#55AEE8"
+define battle_status_text_color = "#F3F3F3"
+define battle_status_label_color = "#494949"
+
+
+# ============================================================
+# BATTLE UI ASSETS
+# ============================================================
+
+define battle_ui_user_status = "images/battle_ui/userstatus.png"
+define battle_ui_enemy_status = "images/battle_ui/enemystatus.png"
+define battle_ui_first_status = "images/battle_ui/firststatus.png"
+define battle_ui_other_status = "images/battle_ui/otherstatus.png"
+define battle_ui_button = "images/battle_ui/button.png"
+define battle_ui_status_fill = "images/battle_ui/status_fill.svg"
 
 
 # ============================================================
@@ -58,6 +81,35 @@ transform battle_enemy_sprite_position:
 
 
 # ============================================================
+# GENERIC COLORED METER
+# ============================================================
+
+screen battle_status_meter(
+    current_value,
+    maximum_value,
+    meter_x,
+    meter_y,
+    meter_width,
+    meter_height,
+    meter_color
+):
+
+    $ safe_maximum = max(1, maximum_value)
+    $ safe_current = max(0, min(current_value, safe_maximum))
+    $ fill_width = int(float(safe_current) / float(safe_maximum) * meter_width)
+
+    if fill_width > 0:
+
+        add Transform(
+            battle_ui_status_fill,
+            xysize=(fill_width, meter_height),
+            matrixcolor=TintMatrix(meter_color)
+        ):
+            xpos meter_x
+            ypos meter_y
+
+
+# ============================================================
 # GENERIC POINTED BUTTON
 # ============================================================
 
@@ -71,35 +123,44 @@ screen battle_command_button(
 ):
 
     $ button_image = Transform(
-        "images/battle_ui/command_button.svg",
+        "images/battle_ui/button.png",
         matrixcolor=TintMatrix(button_color)
     )
 
-    textbutton button_text:
+    $ disabled_button_image = Transform(
+        "images/battle_ui/button.png",
+        matrixcolor=TintMatrix(button_color),
+        alpha=0.42
+    )
+
+    fixed:
 
         xcenter px
         ycenter py
 
-        xsize 300
-        ysize 90
+        xsize 450
+        ysize 150
 
-        background button_image
-        hover_background button_image
-        insensitive_background button_image
+        imagebutton:
 
-        focus_mask True
+            idle button_image
+            hover button_image
+            insensitive disabled_button_image
 
-        text_size 27
+            focus_mask True
+            sensitive enabled
+            action button_action
 
-        text_color "#111111"
-        text_hover_color "#000000"
-        text_insensitive_color "#666666"
+        text button_text:
 
-        text_xalign 0.5
-        text_yalign 0.5
+            xalign 0.5
+            yalign 0.5
 
-        sensitive enabled
-        action button_action
+            xsize 260
+            text_align 0.5
+
+            size 27
+            color "#171717"
 
 
 # ============================================================
@@ -108,43 +169,58 @@ screen battle_command_button(
 
 screen battle_turn_order(enemy_name):
 
-    frame:
+    $ enemy_first = enemy_goes_first()
 
-        xalign 0.5
-        ypos 20
+    if enemy_first:
+        $ order_names = [enemy_name] + list(battle_allies) + [battle_player_name]
+    else:
+        $ order_names = [battle_player_name] + list(battle_allies) + [enemy_name]
 
-        background "#D6D6D6E6"
-        padding (12, 8)
+    $ order_names = order_names[:5]
 
-        hbox:
+    fixed:
 
-            spacing 8
+        xpos 0
+        ypos -10
 
-            use turn_order_entry("YOU")
+        xsize 450
+        ysize 430
 
-            for ally in battle_allies:
-                use turn_order_entry(ally)
+        for order_index, character_name in enumerate(order_names):
 
-            use turn_order_entry(enemy_name)
+            if order_index == 0:
 
+                add battle_ui_first_status:
+                    xpos 0
+                    ypos 0
 
-screen turn_order_entry(character_name):
+                text str(character_name):
+                    xcenter 285
+                    ycenter 75
+                    xsize 245
+                    text_align 0.5
+                    size 25
+                    bold True
+                    color "#F4F4F4"
+                    outlines [(2, "#000000AA", 0, 0)]
 
-    frame:
+            else:
 
-        xsize 115
-        ysize 58
+                $ other_y = 72 + ((order_index - 1) * 58)
 
-        background "#EEEEEEF2"
-        padding (6, 6)
+                add battle_ui_other_status:
+                    xpos 0
+                    ypos other_y
 
-        text character_name:
-
-            size 18
-            color "#202020"
-
-            xalign 0.5
-            yalign 0.5
+                text str(character_name):
+                    xcenter 185
+                    ycenter other_y + 50
+                    xsize 270
+                    text_align 0.5
+                    size 22
+                    bold True
+                    color "#F4F4F4"
+                    outlines [(2, "#000000AA", 0, 0)]
 
 
 # ============================================================
@@ -153,32 +229,86 @@ screen turn_order_entry(character_name):
 
 screen battle_player_status():
 
-    frame:
+    fixed:
 
-        xpos 30
-        ypos 490
+        xpos 0
+        ypos 875
 
-        xsize 300
+        xsize 600
+        ysize 200
 
-        background "#D6D6D6E6"
-        padding (15, 10)
+        add battle_ui_user_status
 
-        vbox:
+        text battle_player_name:
+            xpos 165
+            ypos 34
+            size 29
+            bold True
+            color battle_status_text_color
+            outlines [(2, "#000000AA", 0, 0)]
 
-            spacing 5
+        text battle_status_text("player"):
+            xpos 355
+            ypos 43
+            xsize 220
+            text_align 1.0
+            size 15
+            color "#D8D8D8"
+            outlines [(1, "#00000099", 0, 0)]
 
-            text "RIMURU":
-                size 24
-                color "#202020"
+        text "HP":
+            xpos 169
+            ypos 82
+            size 20
+            bold True
+            color battle_status_label_color
 
-            text "HP  [player_hp] / [player_max_hp]":
-                size 20
-                color "#202020"
-            bar value StaticValue(player_hp, player_max_hp) xsize 270 ysize 16 left_bar "#468879" right_bar "#9EA8A5"
-            text "MP  [player_mp] / [player_max_mp]" size 20 color "#202020"
-            bar value StaticValue(player_mp, player_max_mp) xsize 270 ysize 12 left_bar "#518BAF" right_bar "#9EA8A5"
-            text battle_status_text("player") size 18 color "#374A53"
+        use battle_status_meter(
+            player_hp,
+            player_max_hp,
+            205,
+            85,
+            267,
+            18,
+            battle_hp_color
+        )
 
+        text "[player_hp]/[player_max_hp]":
+            xpos 478
+            ypos 82
+            xsize 112
+            text_align 0.5
+            size 19
+            bold True
+            color battle_status_text_color
+            outlines [(2, "#000000AA", 0, 0)]
+
+        text "MP":
+            xpos 164
+            ypos 121
+            size 20
+            bold True
+            color battle_status_label_color
+
+        use battle_status_meter(
+            player_mp,
+            player_max_mp,
+            201,
+            123,
+            267,
+            18,
+            battle_mp_color
+        )
+
+        text "[player_mp]/[player_max_mp]":
+            xpos 478
+            ypos 120
+            xsize 112
+            text_align 0.5
+            size 19
+            bold True
+            color battle_status_text_color
+            outlines [(2, "#000000AA", 0, 0)]
 
 
 # ============================================================
@@ -188,33 +318,71 @@ screen battle_player_status():
 screen battle_enemy_status(
     enemy_name,
     enemy_hp,
-    enemy_max_hp
+    enemy_max_hp,
+    enemy_mp=100,
+    enemy_max_mp=100
 ):
 
-    frame:
+    fixed:
 
-        xalign 0.98
-        ypos 105
+        xpos 1320
+        ypos 0
 
-        xsize 330
+        xsize 600
+        ysize 200
 
-        background "#D6D6D6E6"
-        padding (15, 10)
+        add battle_ui_enemy_status
 
-        vbox:
+        text enemy_name:
+            xpos 118
+            ypos 34
+            xsize 300
+            size 29
+            bold True
+            color battle_status_text_color
+            outlines [(2, "#000000AA", 0, 0)]
 
-            spacing 5
+        text battle_status_text("enemy"):
+            xpos 118
+            ypos 61
+            xsize 275
+            size 15
+            color "#D8D8D8"
+            outlines [(1, "#00000099", 0, 0)]
 
-            text enemy_name:
-                size 24
-                color "#202020"
+        use battle_status_meter(
+            enemy_hp,
+            enemy_max_hp,
+            126,
+            83,
+            279,
+            18,
+            battle_hp_color
+        )
 
-            text "HP  [enemy_hp] / [enemy_max_hp]":
-                size 20
-                color "#202020"
-            bar value StaticValue(enemy_hp, enemy_max_hp) xsize 300 ysize 16 left_bar "#AB646B" right_bar "#9EA8A5"
-            text battle_status_text("enemy") size 18 color "#374A53"
+        text "HP":
+            xpos 414
+            ypos 82
+            size 20
+            bold True
+            color battle_status_label_color
 
+        use battle_status_meter(
+            enemy_mp,
+            enemy_max_mp,
+            126,
+            121,
+            280,
+            18,
+            battle_mp_color
+        )
+
+        text "MP":
+            xpos 414
+            ypos 121
+            size 20
+            bold True
+            color battle_status_label_color
 
 
 # ============================================================
@@ -233,7 +401,6 @@ screen battle_command_menu(
 
     modal True
 
-
     # battle_stage stays visible throughout command selection and narration.
 
     # ========================================================
@@ -242,14 +409,14 @@ screen battle_command_menu(
 
     fixed:
 
-        xsize 950
-        ysize 400
+        xsize 820
+        ysize 390
 
         xalign 1.0
         yalign 1.0
 
         xoffset -15
-        yoffset -10
+        yoffset -5
 
 
         # ====================================================
@@ -260,16 +427,16 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "ITEMS",
-                160,
-                190,
+                150,
+                200,
                 Show("battle_stomach_menu"),
                 battle_color_stomach
             )
 
             use battle_command_button(
                 "ALLIES",
-                790,
-                190,
+                650,
+                200,
                 Show("battle_allies_menu"),
                 battle_color_allies,
                 thought_communication
@@ -277,8 +444,8 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "RUN",
-                475,
-                290,
+                400,
+                250,
                 Return(("run",)),
                 battle_color_run,
                 can_run
@@ -286,8 +453,8 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "FIGHT",
-                475,
-                165,
+                400,
+                150,
                 [
                     SetVariable("battle_category", None),
                     SetVariable("battle_menu_level", "categories"),
@@ -304,8 +471,8 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "PHYSICAL",
-                205,
-                135,
+                150,
+                100,
                 [
                     SetVariable("battle_category", "physical"),
                     SetVariable("battle_menu_level", "moves"),
@@ -315,8 +482,8 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "AURA",
-                745,
-                135,
+                650,
+                100,
                 [
                     SetVariable("battle_category", "aura"),
                     SetVariable("battle_menu_level", "moves"),
@@ -326,8 +493,8 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "MAGIC",
-                205,
-                250,
+                150,
+                200,
                 [
                     SetVariable("battle_category", "magic"),
                     SetVariable("battle_menu_level", "moves"),
@@ -337,8 +504,8 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "SKILLS",
-                745,
-                250,
+                650,
+                200,
                 [
                     SetVariable("battle_category", "skills"),
                     SetVariable("battle_menu_level", "moves"),
@@ -348,16 +515,16 @@ screen battle_command_menu(
 
             use battle_command_button(
                 "FIGHT",
-                475,
-                192,
+                400,
+                150,
                 NullAction(),
                 battle_color_fight
             )
 
             use battle_command_button(
                 "CANCEL",
-                475,
-                335,
+                400,
+                250,
                 [
                     SetVariable("battle_category", None),
                     SetVariable("battle_menu_level", "main"),
@@ -378,9 +545,9 @@ screen battle_command_menu(
                 $ current_category_name = "PHYSICAL"
                 $ current_category_color = battle_color_physical
 
-                use battle_move_button(current_moves, 0, 205, 145, current_category_color, enemy_hp, predator_allowed)
-                use battle_move_button(current_moves, 1, 745, 145, current_category_color, enemy_hp, predator_allowed)
-                use battle_move_button(current_moves, 2, 475, 60, current_category_color, enemy_hp, predator_allowed)
+                use battle_move_button(current_moves, 0, 230, 145, current_category_color, enemy_hp, predator_allowed)
+                use battle_move_button(current_moves, 1, 590, 145, current_category_color, enemy_hp, predator_allowed)
+                use battle_move_button(current_moves, 2, 410, 60, current_category_color, enemy_hp, predator_allowed)
 
 
             elif battle_category == "aura":
@@ -412,16 +579,16 @@ screen battle_command_menu(
 
             use battle_command_button(
                 current_category_name,
-                475,
-                192,
+                400,
+                150,
                 NullAction(),
                 current_category_color
             )
 
             use battle_command_button(
                 "CANCEL",
-                475,
-                335,
+                400,
+                250,
                 [
                     SetVariable("battle_category", None),
                     SetVariable("battle_menu_level", "categories"),
@@ -441,11 +608,11 @@ screen battle_five_move_layout(
     predator_allowed
 ):
 
-    use battle_move_button(move_list, 0, 205, 135, button_color, enemy_hp, predator_allowed)
-    use battle_move_button(move_list, 1, 745, 135, button_color, enemy_hp, predator_allowed)
-    use battle_move_button(move_list, 2, 205, 250, button_color, enemy_hp, predator_allowed)
-    use battle_move_button(move_list, 3, 745, 250, button_color, enemy_hp, predator_allowed)
-    use battle_move_button(move_list, 4, 475, 60, button_color, enemy_hp, predator_allowed)
+    use battle_move_button(move_list, 0, 150, 100, button_color, enemy_hp, predator_allowed)
+    use battle_move_button(move_list, 1, 650, 100, button_color, enemy_hp, predator_allowed)
+    use battle_move_button(move_list, 2, 150, 200, button_color, enemy_hp, predator_allowed)
+    use battle_move_button(move_list, 3, 650, 200, button_color, enemy_hp, predator_allowed)
+    use battle_move_button(move_list, 4, 400, 50, button_color, enemy_hp, predator_allowed)
 
 
 # ============================================================
@@ -608,10 +775,16 @@ screen battle_allies_menu():
                                 yalign 0.5
 
 
-# Dedicated battle presentation remains behind battle narration as well as menus.
+# ============================================================
+# PERSISTENT BATTLE PRESENTATION
+# ============================================================
+
 screen battle_stage():
+
     add enemy_background
+
     add "images/characters/yourself/slimebattle.png" at battle_player_sprite_position
+
     if enemy_sprite:
         add enemy_sprite at battle_enemy_sprite_position
     else:
@@ -620,17 +793,21 @@ screen battle_stage():
             ypos 280
             xysize (510, 280)
             background "#14282DDD"
+
             vbox:
                 align (0.5, 0.5)
                 spacing 15
-                text enemy_name size 36 color "#EDF6F4" xalign 0.5
-                text "SPRITE PLACEHOLDER" size 20 color "#A8BEC5" xalign 0.5
+
+                text enemy_name:
+                    size 36
+                    color "#EDF6F4"
+                    xalign 0.5
+
+                text "SPRITE PLACEHOLDER":
+                    size 20
+                    color "#A8BEC5"
+                    xalign 0.5
+
+    use battle_turn_order(enemy_name)
     use battle_player_status()
     use battle_enemy_status(enemy_name, enemy_hp, enemy_max_hp)
-    frame:
-        xalign 0.5
-        ypos 25
-        background "#122933ED"
-        padding (20, 12)
-        $ order = enemy_name + " → Rimuru" if enemy_goes_first() else "Rimuru → " + enemy_name
-        text "Turn [battle_turn] • [order]" size 24 color "#EDF6F4"
