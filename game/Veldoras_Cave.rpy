@@ -202,6 +202,9 @@ label update_lake_2_view:
 
 label veldoras_cave_start:
 
+    $ migrate_game_state()
+    $ navigation_active = False
+
     scene cave_blind
     with fade
 
@@ -234,6 +237,11 @@ label cave_start:
         "Go right":
             jump heat_lizard_cave
 
+        "Rest":
+            $ restore_player()
+            n "Rimuru rests in the quiet chamber."
+            jump cave_start
+
 
 # ============================================================
 # HEAT LIZARD
@@ -265,7 +273,7 @@ label heat_lizard_cave:
             "Absorb the lizard":
 
                 $ heat_lizard_absorbed = True
-                $ heat_resistance = True
+                $ learn_skill("heat_resistance", "exploration")
 
                 n "The lizard is absorbed."
 
@@ -338,7 +346,7 @@ label cold_lizard_cave:
             "Absorb the lizard":
 
                 $ cold_lizard_absorbed = True
-                $ cold_resistance = True
+                $ learn_skill("cold_resistance", "exploration")
 
                 n "The lizard is absorbed."
 
@@ -404,7 +412,7 @@ label cave_branch_3:
             "Absorb the mineral":
 
                 $ branch3_ore_absorbed = True
-                $ magic_ore_clusters += 1
+                $ add_item("magic_ore", 1)
 
                 n "The mineral cluster is absorbed."
 
@@ -442,7 +450,7 @@ label cave_branch_5:
             "Absorb the mineral":
 
                 $ branch5_ore_absorbed = True
-                $ magic_ore_clusters += 1
+                $ add_item("magic_ore", 1)
 
                 n "The mineral cluster is absorbed."
 
@@ -504,7 +512,7 @@ label veldora_chamber:
             "Absorb the six clusters":
 
                 $ veldora_ore_absorbed = True
-                $ magic_ore_clusters += 6
+                $ add_item("magic_ore", 6)
 
                 n "All six clusters are absorbed."
 
@@ -546,8 +554,8 @@ label veldora_first_meeting:
 
     n "Something changes inside me."
 
-    $ mana_perception = True
-    $ telepathy = True
+    $ learn_skill("mana_perception", "exploration")
+    $ learn_skill("telepathy", "exploration")
 
     n "Acquired: Mana Perception."
 
@@ -557,6 +565,9 @@ label veldora_first_meeting:
 
     $ veldora_in_stomach = True
     $ met_veldora = True
+    $ meet_character("veldora")
+    $ record_event("met_veldora")
+    $ record_event("veldora_in_stomach")
 
     pause 1.0
 
@@ -596,7 +607,7 @@ label cave_branch_4:
             "Absorb the Hipokute Herbs":
 
                 $ branch4_herbs_absorbed = True
-                $ hipokute_herb_clusters += 1
+                $ add_item("hipokute", 1)
 
                 n "The herbs are absorbed."
 
@@ -636,7 +647,7 @@ label underground_lake_1:
             "Absorb the herbs":
 
                 $ lake1_herbs_absorbed = True
-                $ hipokute_herb_clusters += 1
+                $ add_item("hipokute", 1)
 
                 jump underground_lake_1
 
@@ -671,7 +682,7 @@ label acquire_water_manipulation:
 
     n "Something changes."
 
-    $ water_manipulation = True
+    $ learn_skill("water_manipulation", "exploration")
 
     n "Acquired: Water Manipulation."
 
@@ -710,7 +721,7 @@ label underground_lake_2:
             "Absorb the herbs":
 
                 $ lake2_herbs_absorbed = True
-                $ hipokute_herb_clusters += 1
+                $ add_item("hipokute", 1)
 
                 jump underground_lake_2
 
@@ -732,7 +743,7 @@ label acquire_water_manipulation_right:
 
     n "I absorb some of the underground water."
 
-    $ water_manipulation = True
+    $ learn_skill("water_manipulation", "exploration")
 
     n "Acquired: Water Manipulation."
 
@@ -788,7 +799,7 @@ label electric_lizard_cave:
             "Absorb it":
 
                 $ electric_lizard_absorbed = True
-                $ electricity_resistance = True
+                $ learn_skill("electricity_resistance", "exploration")
 
                 n "The lizard is absorbed."
 
@@ -851,7 +862,7 @@ label thunder_frog_area:
                 "Absorb all three herb clusters":
 
                     $ frog_herbs_absorbed = True
-                    $ hipokute_herb_clusters += 3
+                    $ add_item("hipokute", 3)
 
                     n "The herbs are absorbed."
 
@@ -877,7 +888,7 @@ label thunder_frog_battle:
         n "The Thunder Frog has been defeated!"
 
         $ thunder_frog_defeated = True
-        $ paralysis_resistance = True
+        $ learn_skill("paralysis_resistance", "exploration")
 
         n "Acquired: Paralysis Resistance."
 
@@ -1310,9 +1321,6 @@ label evil_centipede_area:
 
         menu:
 
-            "Move forward":
-                jump veldora_cave_exit
-
             "Go back":
                 jump part2_final_branch
 
@@ -1388,6 +1396,9 @@ label armorsaurus_area:
 # ============================================================
 
 label veldora_cave_exit:
+
+    $ navigation_active = False
+    $ current_location = None
 
     scene cave_exit_placeholder
     with dissolve

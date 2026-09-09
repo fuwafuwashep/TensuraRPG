@@ -40,10 +40,10 @@ transform battle_player_sprite_position:
     xanchor 0.5
     yanchor 1.0
 
-    xpos 360
-    ypos 960
+    xpos 485
+    ypos 770
 
-    zoom 0.75
+    zoom 2.5
 
 
 transform battle_enemy_sprite_position:
@@ -156,7 +156,7 @@ screen battle_player_status():
     frame:
 
         xpos 30
-        yalign 0.86
+        ypos 490
 
         xsize 300
 
@@ -167,13 +167,18 @@ screen battle_player_status():
 
             spacing 5
 
-            text "YOU":
+            text "RIMURU":
                 size 24
                 color "#202020"
 
             text "HP  [player_hp] / [player_max_hp]":
                 size 20
                 color "#202020"
+            bar value StaticValue(player_hp, player_max_hp) xsize 270 ysize 16 left_bar "#468879" right_bar "#9EA8A5"
+            text "MP  [player_mp] / [player_max_mp]" size 20 color "#202020"
+            bar value StaticValue(player_mp, player_max_mp) xsize 270 ysize 12 left_bar "#518BAF" right_bar "#9EA8A5"
+            text battle_status_text("player") size 18 color "#374A53"
+
 
 
 # ============================================================
@@ -207,6 +212,9 @@ screen battle_enemy_status(
             text "HP  [enemy_hp] / [enemy_max_hp]":
                 size 20
                 color "#202020"
+            bar value StaticValue(enemy_hp, enemy_max_hp) xsize 300 ysize 16 left_bar "#AB646B" right_bar "#9EA8A5"
+            text battle_status_text("enemy") size 18 color "#374A53"
+
 
 
 # ============================================================
@@ -219,27 +227,14 @@ screen battle_command_menu(
     enemy_max_hp,
     enemy_sprite=None,
     battle_background="images/backgrounds/VeldoracaveBattle.png",
-    predator_allowed=True
+    predator_allowed=True,
+    can_run=True
 ):
 
     modal True
 
-    $ sync_skill_moves()
 
-    # Background.
-    add battle_background
-
-    # Player.
-    add "images/characters/yourself/slimebattle.png" at battle_player_sprite_position
-
-    # Enemy.
-    if enemy_sprite:
-        add enemy_sprite at battle_enemy_sprite_position
-
-    use battle_turn_order(enemy_name)
-    use battle_player_status()
-    use battle_enemy_status(enemy_name, enemy_hp, enemy_max_hp)
-
+    # battle_stage stays visible throughout command selection and narration.
 
     # ========================================================
     # BOTTOM-RIGHT COMMAND CLUSTER
@@ -264,7 +259,7 @@ screen battle_command_menu(
         if battle_menu_level == "main":
 
             use battle_command_button(
-                "STOMACH",
+                "ITEMS",
                 160,
                 190,
                 Show("battle_stomach_menu"),
@@ -277,7 +272,7 @@ screen battle_command_menu(
                 190,
                 Show("battle_allies_menu"),
                 battle_color_allies,
-                thought_communication or telepathy
+                thought_communication
             )
 
             use battle_command_button(
@@ -285,7 +280,8 @@ screen battle_command_menu(
                 475,
                 290,
                 Return(("run",)),
-                battle_color_run
+                battle_color_run,
+                can_run
             )
 
             use battle_command_button(
@@ -478,7 +474,7 @@ screen battle_move_button(
         )
 
         use battle_command_button(
-            move_name,
+            move_name + "\n" + str(MOVE_DATA[move_name].get("mp_cost", 0)) + " MP",
             px,
             py,
             Return(("move", battle_category, move_name)),
@@ -492,60 +488,11 @@ screen battle_move_button(
 # ============================================================
 
 screen battle_stomach_menu():
-
     modal True
-
-    add "#00000070"
-
-    frame:
-
-        xalign 0.5
-        yalign 0.5
-
-        xsize 800
-        ysize 720
-
-        background "#D6D6D6F2"
-        padding (30, 30)
-
-        vbox:
-
-            spacing 20
-
-            hbox:
-
-                xfill True
-
-                text "STOMACH":
-                    size 36
-                    color "#202020"
-
-                textbutton "X":
-                    xalign 1.0
-                    background None
-                    text_size 28
-                    text_color "#202020"
-                    action Hide("battle_stomach_menu")
-
-            viewport:
-
-                xfill True
-                ysize 580
-
-                mousewheel True
-                draggable True
-                scrollbars "vertical"
-
-                vbox:
-
-                    xfill True
-                    spacing 10
-
-                    use battle_storage_entry("Healing Blobs", healing_blobs)
-                    use battle_storage_entry("Berry Bundles", berry_bundles)
-                    use battle_storage_entry("Cattle Deer", cattle_deer_stored)
-                    use battle_storage_entry("Hipokute Herbs", hipokute_herb_clusters)
-                    use battle_storage_entry("Magic Ore", magic_ore_clusters)
+    zorder 200
+    key "game_menu" action Hide("battle_stomach_menu")
+    use rpg_panel("Battle items • Using an item takes a turn", Hide("battle_stomach_menu")):
+        use rpg_inventory_contents(battle=True)
 
 
 screen battle_storage_entry(item_name, amount):
@@ -594,6 +541,9 @@ screen battle_storage_entry(item_name, amount):
 
 screen battle_allies_menu():
 
+    zorder 200
+    key "game_menu" action Hide("battle_allies_menu")
+
     modal True
 
     add "#00000070"
@@ -626,7 +576,7 @@ screen battle_allies_menu():
                     text_color "#202020"
                     action Hide("battle_allies_menu")
 
-            if not thought_communication and not telepathy:
+            if not thought_communication:
 
                 text "Thought Communication is required to fight with allies.":
                     size 24
@@ -656,3 +606,31 @@ screen battle_allies_menu():
                                 size 24
                                 color "#888888"
                                 yalign 0.5
+
+
+# Dedicated battle presentation remains behind battle narration as well as menus.
+screen battle_stage():
+    add enemy_background
+    add "images/characters/yourself/slimebattle.png" at battle_player_sprite_position
+    if enemy_sprite:
+        add enemy_sprite at battle_enemy_sprite_position
+    else:
+        frame:
+            xpos 1120
+            ypos 280
+            xysize (510, 280)
+            background "#14282DDD"
+            vbox:
+                align (0.5, 0.5)
+                spacing 15
+                text enemy_name size 36 color "#EDF6F4" xalign 0.5
+                text "SPRITE PLACEHOLDER" size 20 color "#A8BEC5" xalign 0.5
+    use battle_player_status()
+    use battle_enemy_status(enemy_name, enemy_hp, enemy_max_hp)
+    frame:
+        xalign 0.5
+        ypos 25
+        background "#122933ED"
+        padding (20, 12)
+        $ order = enemy_name + " → Rimuru" if enemy_goes_first() else "Rimuru → " + enemy_name
+        text "Turn [battle_turn] • [order]" size 24 color "#EDF6F4"

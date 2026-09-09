@@ -174,7 +174,7 @@ init python:
             "background": "west_jura_battle",
             "perception": False,
             "physical_resistance": True,
-            "grants": [],
+            "grants": ["steel_strength"],
             "moves": [
                 {"name": "Bite", "type": "physical", "min": 38, "max": 50, "accuracy": 0.95},
                 {"name": "Steel Thread", "type": "skill", "min": 50, "max": 50, "accuracy": 0.95},
@@ -233,7 +233,7 @@ init python:
 
         for skill_key in ENEMY_DATA[enemy_key].get("grants", []):
 
-            if grant_skill(skill_key):
+            if learn_skill(skill_key, "predator:" + enemy_key):
                 gained.append(SKILL_NAMES.get(skill_key, skill_key))
 
         return gained
@@ -251,6 +251,14 @@ init python:
 
 
     def reduce_player_damage_for_resistance(damage, attack_type):
+
+        if attack_type in store.player_immunities:
+            return 0
+        if attack_type == "physical":
+            damage = max(0, damage - store.player_defense)
+        damage = int(damage * (1.0 - min(1.0, max(0.0, store.player_resistances.get(attack_type, 0.0)))))
+        if damage == 0:
+            return 0
 
         # Physical resistance does not stack between Body Armor
         # and Steel Pelt. Either one gives the same resistance.
@@ -299,7 +307,7 @@ label battle_part2_enemy(enemy_key):
 # GENERIC SINGLE-ENEMY BATTLE
 # ============================================================
 
-label battle_enemy(enemy_key, predator_allowed=True):
+label battle_enemy_turns(enemy_key, predator_allowed=True):
 
     $ sync_skill_moves()
 
@@ -313,7 +321,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
     $ enemy_has_perception = enemy_data["perception"]
     $ enemy_physical_resistance = enemy_data["physical_resistance"]
 
-    $ player_hp = player_max_hp
+    $ enemy_run_chance = encounter_policy.get("run_chance", enemy_run_chance) if encounter_policy.get("can_run", enemy_run_chance > 0) else 0.0
 
     $ last_battle_predated = False
     $ last_predation_efficiency = 0.0
@@ -333,10 +341,15 @@ label battle_enemy(enemy_key, predator_allowed=True):
     $ player_skip_turn = False
     $ player_restrained = False
 
+    show screen battle_stage
+
     n "[enemy_name] attacks!"
 
 
     while enemy_hp > 0 and player_hp > 0:
+
+        $ battle_turn += 1
+        $ enemy_acted_this_round = False
 
         $ battle_menu_level = "main"
         $ battle_category = None
@@ -361,12 +374,18 @@ label battle_enemy(enemy_key, predator_allowed=True):
             n "Burn deals [status_damage] damage to you."
 
         if player_hp <= 0:
-            break
+            return "lost"
 
 
         # ====================================================
         # PLAYER TURN
         # ====================================================
+
+        if enemy_goes_first():
+            call battle_enemy_take_turn
+            $ enemy_acted_this_round = True
+            if player_hp <= 0:
+                return "lost"
 
         if player_skip_turn:
 
@@ -385,7 +404,8 @@ label battle_enemy(enemy_key, predator_allowed=True):
                 enemy_max_hp=enemy_max_hp,
                 enemy_sprite=enemy_sprite,
                 battle_background=enemy_background,
-                predator_allowed=predator_allowed
+                predator_allowed=predator_allowed,
+                can_run=enemy_run_chance > 0
             )
 
             window show
@@ -414,6 +434,12 @@ label battle_enemy(enemy_key, predator_allowed=True):
             # PLAYER MOVE
             # ================================================
 
+            elif battle_result[0] == "item":
+
+                $ used_item = use_item(battle_result[1])
+                $ used_item_name = ITEM_DATA[battle_result[1]]["name"]
+                n "Rimuru uses [used_item_name]."
+
             elif battle_result[0] == "move":
 
                 $ chosen_category = battle_result[1]
@@ -439,7 +465,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
 
                         n "Predator consumes the [enemy_name]."
 
-                        n "You absorb 100% of its remaining magicules."
+                        n "You absorb 100 percent of its remaining magicules."
 
                         if gained_skills:
 
@@ -459,7 +485,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
 
                     if move_hit:
 
-                        $ player_damage = renpy.random.randint(35, 45)
+                        $ player_damage = renpy.random.randint(35, 45) + player_attack
                         $ player_damage = int(player_damage * physical_damage_multiplier())
 
                         if player_restrained:
@@ -515,7 +541,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
                         $ misty_field_active = True
 
                         n "Misty Field fills the battlefield."
-                        n "The enemy's accuracy is lowered by 30%."
+                        n "The enemy's accuracy is lowered by 30 percent."
 
 
                 # --------------------------------------------
@@ -569,7 +595,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
                     $ enemy_steel_web = True
 
                     n "Steel Web surrounds the [enemy_name]."
-                    n "It will take 5% damage each turn."
+                    n "It will take 5 percent damage each turn."
 
 
                 # --------------------------------------------
@@ -654,7 +680,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
 
                     else:
 
-                        n "You need to be above 50% HP to use Voice Canon."
+                        n "You need to be above 50 percent HP to use Voice Canon."
 
 
                 # --------------------------------------------
@@ -666,7 +692,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
                     $ enemy_damage_reduction_turns = 3
 
                     n "Coercion crushes the enemy's fighting spirit."
-                    n "Its damage is reduced by 25% for 3 turns."
+                    n "Its damage is reduced by 25 percent for 3 turns."
 
 
                 # --------------------------------------------
@@ -699,7 +725,7 @@ label battle_enemy(enemy_key, predator_allowed=True):
         # ====================================================
 
         if enemy_hp <= 0:
-            break
+            jump battle_enemy_victory
 
 
         # ====================================================
@@ -728,91 +754,28 @@ label battle_enemy(enemy_key, predator_allowed=True):
             n "Steel Web deals [status_damage] damage to the [enemy_name]."
 
         if enemy_hp <= 0:
-            break
+            jump battle_enemy_victory
 
 
         # ====================================================
         # ENEMY TURN
         # ====================================================
 
-        if enemy_skip_turn:
+        if not enemy_acted_this_round:
+            call battle_enemy_take_turn
 
-            $ enemy_skip_turn = False
-
-            n "The [enemy_name] cannot move this turn!"
-
-        else:
-
-            $ enemy_move = renpy.random.choice(enemy_data["moves"])
-            $ enemy_move_name = enemy_move["name"]
-            $ enemy_accuracy = enemy_move["accuracy"]
-
-            if misty_field_active and not enemy_has_perception:
-                $ enemy_accuracy = max(0.0, enemy_accuracy - 0.30)
-
-            if renpy.random.random() <= enemy_accuracy:
-
-                $ enemy_damage = renpy.random.randint(enemy_move["min"], enemy_move["max"])
-
-                if enemy_damage_reduction_turns > 0:
-                    $ enemy_damage = max(0, int(enemy_damage * 0.75))
-
-                $ enemy_damage = reduce_player_damage_for_resistance(
-                    enemy_damage,
-                    enemy_move["type"]
-                )
-
-                $ player_hp = max(0, player_hp - enemy_damage)
-
-                n "The [enemy_name] uses [enemy_move_name]!"
-
-                if enemy_damage > 0:
-                    n "You take [enemy_damage] damage."
-
-                if enemy_move.get("restrain", False):
-
-                    $ player_restrained = True
-                    n "The thread restricts your movement."
-
-                if enemy_move.get("drain", False) and enemy_damage > 0:
-
-                    $ drain_heal = max(1, int(enemy_damage * 0.50))
-                    $ enemy_hp = min(enemy_max_hp, enemy_hp + drain_heal)
-
-                    n "The [enemy_name] restores [drain_heal] HP."
-
-                if enemy_move.get("poison_chance", 0.0) > 0.0:
-
-                    if renpy.random.random() < enemy_move["poison_chance"]:
-
-                        $ player_poisoned = True
-                        n "You are poisoned!"
-
-                if enemy_move.get("burn_chance", 0.0) > 0.0:
-
-                    if renpy.random.random() < enemy_move["burn_chance"]:
-
-                        $ player_burned = True
-                        n "You are burned!"
-
-                if enemy_move.get("paralysis_chance", 0.0) > 0.0:
-
-                    $ paralysis_roll = enemy_move["paralysis_chance"]
-
-                    if getattr(store, "paralysis_resistance", False):
-                        $ paralysis_roll *= 0.50
-
-                    if renpy.random.random() < paralysis_roll:
-                        $ player_skip_turn = True
-                        n "You are paralyzed!"
-
-            else:
-
-                n "The [enemy_name]'s [enemy_move_name] misses!"
-
+        if player_hp > 0:
+            $ ally_recovery = battle_assistance()
+            if ally_recovery:
+                n "Your allies help you recover [ally_recovery] HP."
 
         if enemy_damage_reduction_turns > 0:
             $ enemy_damage_reduction_turns -= 1
+
+        if player_hp > 0:
+            $ conditional_outcome = battle_resolution(encounter_policy)
+            if conditional_outcome is not None:
+                return conditional_outcome
 
 
     # ============================================================
@@ -820,34 +783,123 @@ label battle_enemy(enemy_key, predator_allowed=True):
     # ============================================================
 
     if enemy_hp <= 0:
+        jump battle_enemy_victory
 
-        if predator and predator_allowed and not last_battle_predated:
-
-            menu:
-
-                "Predate the defeated monster":
-
-                    $ last_battle_predated = True
-                    $ last_predation_efficiency = 0.80
-
-                    $ gained_skills = grant_enemy_skills(enemy_key)
-
-                    n "Predator consumes the defeated [enemy_name]."
-
-                    n "You absorb 80% of its magicules."
-
-                    if gained_skills:
-
-                        $ gained_text = ", ".join(gained_skills)
-
-                        n "Acquired: [gained_text]."
+    return "lost"
 
 
-                "Leave the monster":
+# ============================================================
+# BATTLE VICTORY
+# ============================================================
 
-                    pass
+label battle_enemy_victory:
+
+    if predator and predator_allowed and not last_battle_predated:
+
+        menu:
+
+            "Predate the defeated monster":
+
+                $ last_battle_predated = True
+                $ last_predation_efficiency = 0.80
+
+                $ gained_skills = grant_enemy_skills(enemy_key)
+
+                n "Predator consumes the defeated [enemy_name]."
+
+                n "You absorb 80 percent of its magicules."
+
+                if gained_skills:
+
+                    $ gained_text = ", ".join(gained_skills)
+
+                    n "Acquired: [gained_text]."
 
 
-        return "won"
+            "Leave the monster":
 
-        return "lost"
+                pass
+
+
+    return "won"
+
+
+label battle_enemy_take_turn:
+
+    if enemy_skip_turn:
+
+        $ enemy_skip_turn = False
+
+        n "The [enemy_name] cannot move this turn!"
+
+    else:
+
+        $ enemy_move = renpy.random.choice(enemy_data["moves"])
+        $ enemy_move_name = enemy_move["name"]
+        $ enemy_accuracy = enemy_move["accuracy"]
+
+        if misty_field_active and not enemy_has_perception:
+            $ enemy_accuracy = max(0.0, enemy_accuracy - 0.30)
+
+        if renpy.random.random() <= enemy_accuracy:
+
+            $ enemy_damage = renpy.random.randint(enemy_move["min"], enemy_move["max"])
+
+            if enemy_damage_reduction_turns > 0:
+                $ enemy_damage = max(0, int(enemy_damage * 0.75))
+
+            $ enemy_damage = reduce_player_damage_for_resistance(
+                enemy_damage,
+                enemy_move["type"]
+            )
+
+            $ player_hp = max(0, player_hp - enemy_damage)
+
+            n "The [enemy_name] uses [enemy_move_name]!"
+
+            if enemy_damage > 0:
+                n "You take [enemy_damage] damage."
+
+            if enemy_move.get("restrain", False):
+
+                $ player_restrained = True
+                n "The thread restricts your movement."
+
+            if enemy_move.get("drain", False) and enemy_damage > 0:
+
+                $ drain_heal = max(1, int(enemy_damage * 0.50))
+                $ enemy_hp = min(enemy_max_hp, enemy_hp + drain_heal)
+
+                n "The [enemy_name] restores [drain_heal] HP."
+
+            if enemy_move.get("poison_chance", 0.0) > 0.0:
+
+                if "poison" not in player_immunities and renpy.random.random() < enemy_move["poison_chance"]:
+
+                    $ player_poisoned = True
+                    n "You are poisoned!"
+
+            if enemy_move.get("burn_chance", 0.0) > 0.0:
+
+                if "heat" not in player_immunities and renpy.random.random() < enemy_move["burn_chance"]:
+
+                    $ player_burned = True
+                    n "You are burned!"
+
+            if enemy_move.get("paralysis_chance", 0.0) > 0.0:
+
+                $ paralysis_roll = enemy_move["paralysis_chance"]
+
+                if getattr(store, "paralysis_resistance", False):
+                    $ paralysis_roll *= 0.50
+
+                if "paralysis" not in player_immunities and renpy.random.random() < paralysis_roll:
+                    $ player_skip_turn = True
+                    n "You are paralyzed!"
+
+        else:
+
+            n "The [enemy_name]'s [enemy_move_name] misses!"
+
+
+    return

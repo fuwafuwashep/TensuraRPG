@@ -248,7 +248,8 @@ init python:
         if move_name not in MOVE_DATA:
             return
 
-        if move_name not in store.unlocked_moves:
+        newly_unlocked = move_name not in store.unlocked_moves
+        if newly_unlocked:
             store.unlocked_moves.append(move_name)
 
         max_uses = MOVE_DATA[move_name]["max_uses"]
@@ -256,7 +257,7 @@ init python:
         if max_uses is not None and move_name not in store.move_uses_remaining:
             store.move_uses_remaining[move_name] = max_uses
 
-        if auto_equip and not move_is_equipped(move_name):
+        if auto_equip and newly_unlocked and not move_is_equipped(move_name):
 
             category = MOVE_DATA[move_name]["category"]
             equipped = category_move_list(category)
@@ -289,6 +290,9 @@ init python:
 
     def unequip_move(move_name):
 
+        if move_name == "Basic Attack":
+            return
+
         for category in ("physical", "aura", "magic", "skills"):
 
             equipped = category_move_list(category)
@@ -299,11 +303,6 @@ init python:
 
 
     def sync_skill_moves():
-
-        # The old cave code calls this Telepathy. Treat it as
-        # Thought Communication too so the old save still works.
-        if getattr(store, "telepathy", False):
-            store.thought_communication = True
 
         unlock_move("Basic Attack")
 
@@ -349,9 +348,11 @@ init python:
 
     def get_equipped_moves(category, predator_allowed=True):
 
-        sync_skill_moves()
-
         result = list(category_move_list(category))
+        # Older saves could unequip every zero-cost attack. Keep a usable
+        # fallback even in a no-escape battle after MP and move uses run out.
+        if category == "physical" and "Basic Attack" not in result:
+            result.insert(0, "Basic Attack")
 
         if not predator_allowed and "Predate" in result:
             result.remove("Predate")
@@ -366,13 +367,12 @@ init python:
         if max_uses is None:
             return True
 
-        if move_name not in store.move_uses_remaining:
-            store.move_uses_remaining[move_name] = max_uses
-
-        return store.move_uses_remaining[move_name] > 0
+        return store.move_uses_remaining.get(move_name, max_uses) > 0
 
 
     def consume_move_use(move_name):
+
+        store.player_mp = max(0, store.player_mp - MOVE_DATA[move_name].get("mp_cost", 0))
 
         max_uses = MOVE_DATA[move_name]["max_uses"]
 
@@ -403,6 +403,9 @@ init python:
         player_hp,
         player_max_hp
     ):
+
+        if store.player_mp < MOVE_DATA[move_name].get("mp_cost", 0):
+            return False
 
         if not move_has_uses(move_name):
             return False
@@ -441,6 +444,12 @@ init python:
 
         result = []
 
+        if getattr(store, "telepathy", False):
+            result.append(("Telepathy", "The de-evolved form of Thought Communication. Enables certain communication-based techniques."))
+
+        if getattr(store, "mana_perception", False):
+            result.append(("Mana Perception", "Reveals unseen paths and traces of magicules."))
+
         # Existing cave skills/resistances.
         if getattr(store, "water_manipulation", False):
             result.append(("Water Manipulation", "Unlocks Water Blade and Misty Field."))
@@ -472,10 +481,10 @@ init python:
             ("strengthen", "Doubles physical attack damage."),
             ("steel_strength", "Triples physical attack damage."),
             ("voice_canon", "Unlocks Voice Canon."),
-            ("danger_sense", "Adds first-turn priority. Full speed/priority math is not implemented yet."),
+            ("danger_sense", "Adds 5 Speed on the first turn."),
             ("keen_smell", "Lets you locate monsters throughout the current region."),
             ("coercion", "Unlocks Intimidation."),
-            ("shadow_motion", "Adds first-turn priority. Full speed/priority math is not implemented yet."),
+            ("shadow_motion", "Adds 5 Speed on the first turn."),
             ("black_lightning", "Unlocks Black Bolt and Black Discharge."),
             ("fire_breath", "Unlocks Fire Breath."),
         ]
@@ -484,6 +493,11 @@ init python:
 
             if getattr(store, key, False):
                 result.append((SKILL_NAMES[key], description))
+
+        for key in store.learned_skills:
+            if key in SKILL_DATA:
+                data = SKILL_DATA[key]
+                result.append((data["name"], data.get("description", data["category"] + " skill.")))
 
         return result
 

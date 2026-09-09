@@ -8,60 +8,12 @@
 # ============================================================
 
 screen storage_menu():
-
+    tag rpg_panel
     modal True
-
-    add "#00000070"
-
-    frame:
-
-        xalign 0.5
-        yalign 0.5
-
-        xsize 800
-        ysize 760
-
-        background "#D6D6D6F2"
-        padding (30, 30)
-
-        vbox:
-
-            spacing 20
-
-            hbox:
-
-                xfill True
-
-                text "STORAGE":
-                    size 38
-                    color "#202020"
-
-                textbutton "X":
-                    xalign 1.0
-                    text_size 28
-                    text_color "#202020"
-                    background None
-                    action Hide("storage_menu")
-
-            viewport:
-
-                xfill True
-                ysize 610
-
-                mousewheel True
-                draggable True
-                scrollbars "vertical"
-
-                vbox:
-
-                    xfill True
-                    spacing 10
-
-                    use storage_entry("Healing Blobs", healing_blobs)
-                    use storage_entry("Berry Bundles", berry_bundles)
-                    use storage_entry("Cattle Deer", cattle_deer_stored)
-                    use storage_entry("Hipokute Herbs", hipokute_herb_clusters)
-                    use storage_entry("Magic Ore", magic_ore_clusters)
+    zorder 200
+    key "game_menu" action Hide("storage_menu")
+    use rpg_panel("Inventory • Stomach", Hide("storage_menu")):
+        use rpg_inventory_contents()
 
 
 screen storage_entry(item_name, amount):
@@ -110,9 +62,12 @@ screen storage_entry(item_name, amount):
 
 screen skills_menu():
 
+    tag rpg_panel
+    zorder 200
+    key "game_menu" action Hide("skills_menu")
+
     modal True
 
-    $ sync_skill_moves()
     $ owned_skills = get_owned_skills()
 
     add "#00000070"
@@ -163,24 +118,7 @@ screen skills_menu():
 
                     for skill_name, description in owned_skills:
 
-                        if skill_name == "Keen Smell" and current_region == "West_Jura":
-
-                            use skill_entry(
-                                skill_name,
-                                description,
-                                [
-                                    Hide("skills_menu"),
-                                    Jump("west_jura_keen_smell_menu")
-                                ],
-                                "USE"
-                            )
-
-                        else:
-
-                            use skill_entry(
-                                skill_name,
-                                description
-                            )
+                        use skill_entry(skill_name, description)
 
 
 screen skill_entry(
@@ -239,9 +177,12 @@ screen skill_entry(
 
 screen loadout_menu():
 
+    tag rpg_panel
+    zorder 200
+    key "game_menu" action Hide("loadout_menu")
+
     modal True
 
-    $ sync_skill_moves()
 
     add "#00000070"
 
@@ -467,3 +408,4 @@ screen equipped_move_row(move_name):
                 text_yalign 0.5
 
                 action Function(unequip_move, move_name)
+                sensitive move_name != "Basic Attack"

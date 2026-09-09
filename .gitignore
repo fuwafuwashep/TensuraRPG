@@ -24,3 +24,11 @@
 /dialogue.tab
 /dialogue.txt
 /strings.json
+
+# Local migration checkpoints and engine test output.
+/.checkpoints/
+/.test-saves/
+/test-results/
+/tests/reports/
+/tests/screenshots/
+/__pycache__/
