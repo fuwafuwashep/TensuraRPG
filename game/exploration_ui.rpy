@@ -518,11 +518,13 @@ screen inventory_grid_screen(close_action):
                                     background Frame("images/inventory_ui/inventory_item.svg", 16, 16, 16, 16)
                                     padding (8, 8)
 
+                                    $ item_font_size = 20 if footprint_w == 1 else 28
+
                                     text "[item_name]\n×[item_qty]":
                                         xalign 0.5
                                         yalign 0.5
                                         text_align 0.5
-                                        size 20 if footprint_w == 1 else 28
+                                        size item_font_size
                                         color "#F2F7F8"
 
                 text "Drag and drop to move stacks. While holding a stack, press Z to split it in half. Odd stacks give the larger half to your mouse (35 → 18 held, 17 left).":
