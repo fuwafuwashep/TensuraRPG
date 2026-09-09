@@ -1,62 +1,56 @@
 # ============================================================
 # STORM DRAGON'S CAVE
 # ============================================================
-# The file was renamed from Veldoras_Cave.rpy to Stormdragons_Cave.rpy.
-# The project still uses a few old internal flag/character keys for save
-# compatibility, but the player-facing Storm Dragon name is chosen by the user.
 
 
 # ============================================================
 # CAVE BACKGROUNDS
 # ============================================================
-# Your repository still currently uses the original PNG filenames.
-# If you rename those PNGs later, only change the paths in this block.
 
 image cave_blind = Solid("#000000")
 
-image cave_branch_d = "images/backgrounds/VeldoracaveBranchD.png"
-image cave_branch_lr = "images/backgrounds/VeldoracaveBranchLR.png"
-image cave_branch_lsr = "images/backgrounds/VeldoracaveBranchLSR.png"
-image cave_branch_s = "images/backgrounds/VeldoracaveBranchS.png"
-image cave_branch_sg = "images/backgrounds/VeldoracaveBranchSG.png"
+image cave_branch_d = "images/stormdragons_cave_backgrounds/StormdragonsCaveBranchD.png"
+image cave_branch_lr = "images/stormdragons_cave_backgrounds/StormdragonsCaveBranchLR.png"
+image cave_branch_lsr = "images/stormdragons_cave_backgrounds/StormdragonsCaveBranchLSR.png"
+image cave_branch_s = "images/stormdragons_cave_backgrounds/StormdragonsCaveBranchS.png"
+image cave_branch_sg = "images/stormdragons_cave_backgrounds/StormdragonsCaveBranchSG.png"
 
-image cave_lake_1 = "images/backgrounds/VeldoracaveLake1.png"
-image cave_lake_2 = "images/backgrounds/VeldoracaveLake2.png"
+image cave_lake_1 = "images/stormdragons_cave_backgrounds/StormdragonsCaveLake1.png"
+image cave_lake_2 = "images/stormdragons_cave_backgrounds/StormdragonsCaveLake2.png"
 
-image cave_lake_empty_1 = "images/backgrounds/VeldoracaveLakeEmpty1.png"
-image cave_lake_empty_2 = "images/backgrounds/VeldoracaveLakeEmpty2.png"
+image cave_lake_empty_1 = "images/stormdragons_cave_backgrounds/StormdragonsCaveLakeEmpty1.png"
+image cave_lake_empty_2 = "images/stormdragons_cave_backgrounds/StormdragonsCaveLakeEmpty2.png"
 
 
 # ============================================================
 # CHASM BACKGROUNDS
 # ============================================================
 
-image cave_chasm_l = "images/backgrounds/VeldoracaveChasmL.png"
-image cave_chasm_m = "images/backgrounds/VeldoracaveChasmM.png"
-image cave_chasm_s = "images/backgrounds/VeldoracaveChasmS.png"
-image cave_chasm_r = "images/backgrounds/VeldoracaveChasmR.png"
+image cave_chasm_l = "images/stormdragons_cave_backgrounds/StormdragonsCaveChasmL.png"
+image cave_chasm_m = "images/stormdragons_cave_backgrounds/StormdragonsCaveChasmM.png"
+image cave_chasm_s = "images/stormdragons_cave_backgrounds/StormdragonsCaveChasmS.png"
+image cave_chasm_r = "images/stormdragons_cave_backgrounds/StormdragonsCaveChasmR.png"
 
 
 # ============================================================
 # STORM DRAGON CUTSCENE IMAGES
 # ============================================================
-# These are the filenames that currently exist in your repository.
 
-image storm_dragon_cutscene_normal = "images/veldoracutscene/VeldoraCutsceneNormal.png"
-image storm_dragon_cutscene_tsundere = "images/veldoracutscene/VeldoraCutsceneTsundere.png"
-image storm_dragon_cutscene_laughing = "images/veldoracutscene/VeldoraCutsceneLaughing.png"
-image storm_dragon_cutscene_swallowed = "images/veldoracutscene/VeldoraCutsceneSwallowed.png"
+image storm_dragon_cutscene_normal = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneNormal.png"
+image storm_dragon_cutscene_tsundere = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneTsundere.png"
+image storm_dragon_cutscene_laughing = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneLaughing.png"
+image storm_dragon_cutscene_swallowed = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneSwallowed.png"
 
-image storm_dragon_cutscene_story_1 = "images/veldoracutscene/VeldoraCutsceneStorypart1.png"
-image storm_dragon_cutscene_story_2 = "images/veldoracutscene/VeldoraCutsceneStorypart2.png"
-image storm_dragon_cutscene_story_3 = "images/veldoracutscene/VeldoraCutsceneStorypart3.png"
-image storm_dragon_cutscene_story_4 = "images/veldoracutscene/VeldoraCutsceneStorypart4.png"
-image storm_dragon_cutscene_story_5 = "images/veldoracutscene/VeldoraCutsceneStorypart5.png"
-image storm_dragon_cutscene_story_6 = "images/veldoracutscene/VeldoraCutsceneStorypart6.png"
-image storm_dragon_cutscene_story_7 = "images/veldoracutscene/VeldoraCutsceneStorypart7.png"
-image storm_dragon_cutscene_story_8 = "images/veldoracutscene/VeldoraCutsceneStorypart8.png"
-image storm_dragon_cutscene_story_9 = "images/veldoracutscene/VeldoraCutsceneStorypart9.png"
-image storm_dragon_cutscene_story_10 = "images/veldoracutscene/VeldoraCutsceneStorypart10.png"
+image storm_dragon_cutscene_story_1 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart1.png"
+image storm_dragon_cutscene_story_2 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart2.png"
+image storm_dragon_cutscene_story_3 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart3.png"
+image storm_dragon_cutscene_story_4 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart4.png"
+image storm_dragon_cutscene_story_5 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart5.png"
+image storm_dragon_cutscene_story_6 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart6.png"
+image storm_dragon_cutscene_story_7 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart7.png"
+image storm_dragon_cutscene_story_8 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart8.png"
+image storm_dragon_cutscene_story_9 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart9.png"
+image storm_dragon_cutscene_story_10 = "images/stormdragons_cave_cutscenes/StormdragonsCutsceneStorypart10.png"
 
 image storm_dragon_vision_white = Solid("#FFFFFF")
 
@@ -69,7 +63,7 @@ image cave_exit_placeholder = Solid("#555555")
 
 
 # Compatibility alias used by older code.
-image cave_visible = "images/backgrounds/VeldoracaveBranchD.png"
+image cave_visible = "images/stormdragons_cave_backgrounds/StormdragonsCaveBranchD.png"
 
 
 # ============================================================

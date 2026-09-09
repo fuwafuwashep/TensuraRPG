@@ -618,7 +618,17 @@ init -4 python:
             quantity = entry["qty"]
             if add_item(item_id, quantity):
                 store.craft_slots[index] = None
+    
+    def inventory_close_cleanup():
 
+        inventory_cancel_drag()
+        return_all_craft_materials()
+
+        store.inventory_ui_tab = "inventory"
+        store.inventory_show_recipes = False
+        store.craft_quantity = 1
+
+        _sync_legacy_inventory()
 
 # ============================================================
 # INVENTORY / CRAFTING SCREEN
@@ -691,7 +701,7 @@ screen inventory_grid_screen(close_action):
                             ypos slot_y
                             xsize INVENTORY_SLOT_SIZE
                             ysize INVENTORY_SLOT_SIZE
-                            add "images/ui/inventory_slot.svg"
+                            add "images/inventory_ui/inventory_slot.svg"
 
                     # Only anchor cells draw items; large items span several cells.
                     for anchor, entry in enumerate(inventory_slots):
@@ -800,7 +810,7 @@ screen inventory_grid_screen(close_action):
                                 frame:
                                     xsize 330
                                     ysize 100
-                                    background Frame("images/ui/inventory_item.svg", 16, 16, 16, 16)
+                                    background Frame("images/inventory_ui/inventory_item.svg", 16, 16, 16, 16)
                                     text "[tray_name]\n×[tray_qty]":
                                         align (0.5, 0.5)
                                         text_align 0.5
@@ -824,7 +834,7 @@ screen inventory_grid_screen(close_action):
                             ypos craft_y
                             xsize 100
                             ysize 100
-                            add "images/ui/craft_slot.svg"
+                            add "images/inventory_ui/craft_slot.svg"
 
                     for craft_index, entry in enumerate(craft_slots):
                         if entry is not None:
@@ -851,7 +861,7 @@ screen inventory_grid_screen(close_action):
                                 frame:
                                     xsize 100
                                     ysize 100
-                                    background Frame("images/ui/inventory_item.svg", 16, 16, 16, 16)
+                                    background Frame("images/inventory_ui/inventory_item.svg", 16, 16, 16, 16)
                                     text "[craft_name]\n×[craft_qty]":
                                         align (0.5, 0.5)
                                         text_align 0.5

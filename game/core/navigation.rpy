@@ -63,7 +63,15 @@ label explore_location:
         else:
             window hide
             call screen location_choices
+
             $ nav_action = resolve_location_action(_return)
+
+            # A toolbar/menu screen can close without returning a
+            # location action. Give Ren'Py an interaction before
+            # restarting the exploration loop.
+            if nav_action is None:
+                $ renpy.pause(0.05, hard=True)
+
             if nav_action is not None:
                 if nav_action["kind"] == "exit":
                     $ enter_location(nav_action["target"])

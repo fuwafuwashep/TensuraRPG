@@ -14,26 +14,26 @@
 # LS  = left / straight main path
 # S   = straight path from the cave
 
-image desire_forest_d = "images/forest_backgrounds/DesireForestBranchD.png"
-image desire_forest_lrs = "images/forest_backgrounds/DesireForestBranchLRS.png"
-image desire_forest_ls = "images/forest_backgrounds/DesireForestBranchLS.png"
-image desire_forest_s = "images/forest_backgrounds/DesireForestBranchS.png"
-image desire_forest_clearing = "images/forest_backgrounds/DesireForestClearing.png"
-image desire_forest_clearing_empty = "images/forest_backgrounds/DesireForestClearingEmpty.png"
-image desire_forest_goblin_village = "images/forest_backgrounds/DesireForestGoblinVillage.png"
-image desire_forest_goblin_command = "images/forest_backgrounds/DesireForestGoblinCommand.png"
+image desire_forest_d = "images/west_forest_backgrounds/DesireForestBranchD.png"
+image desire_forest_lrs = "images/west_forest_backgrounds/DesireForestBranchLRS.png"
+image desire_forest_ls = "images/west_forest_backgrounds/DesireForestBranchLS.png"
+image desire_forest_s = "images/west_forest_backgrounds/DesireForestBranchS.png"
+image desire_forest_clearing = "images/west_forest_backgrounds/DesireForestClearing.png"
+image desire_forest_clearing_empty = "images/west_forest_backgrounds/DesireForestClearingEmpty.png"
+image desire_forest_goblin_village = "images/west_forest_backgrounds/DesireForestGoblinVillage.png"
+image desire_forest_goblin_command = "images/west_forest_backgrounds/DesireForestGoblinCommand.png"
 
 
 # Keep the old image aliases because data/locations.rpy already points at them.
-image west_jura_forest = "images/forest_backgrounds/DesireForestBranchS.png"
-image west_jura_crossroads = "images/forest_backgrounds/DesireForestBranchLRS.png"
-image west_jura_clearing = "images/forest_backgrounds/DesireForestClearing.png"
-image west_jura_orchard = "images/forest_backgrounds/DesireForestBranchLS.png"
-image west_jura_village = "images/forest_backgrounds/DesireForestGoblinVillage.png"
-image west_jura_command_tent_injured = "images/forest_backgrounds/DesireForestGoblinCommand.png"
-image west_jura_command_tent_healed = "images/forest_backgrounds/DesireForestGoblinCommand.png"
-image west_jura_wolf_den = "images/forest_backgrounds/DesireForestBranchD.png"
-image west_jura_battle = "images/forest_backgrounds/DesireForestBranchD.png"
+image west_jura_forest = "images/west_forest_backgrounds/DesireForestBranchS.png"
+image west_jura_crossroads = "images/west_forest_backgrounds/DesireForestBranchLRS.png"
+image west_jura_clearing = "images/west_forest_backgrounds/DesireForestClearing.png"
+image west_jura_orchard = "images/west_forest_backgrounds/DesireForestBranchLS.png"
+image west_jura_village = "images/west_forest_backgrounds/DesireForestGoblinVillage.png"
+image west_jura_command_tent_injured = "images/west_forest_backgrounds/DesireForestGoblinCommand.png"
+image west_jura_command_tent_healed = "images/west_forest_backgrounds/DesireForestGoblinCommand.png"
+image west_jura_wolf_den = "images/west_forest_backgrounds/DesireForestBranchD.png"
+image west_jura_battle = "images/west_forest_backgrounds/DesireForestBranchD.png"
 
 
 # ============================================================
