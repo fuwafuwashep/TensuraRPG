@@ -8,13 +8,19 @@
 # ============================================================
 
 screen storage_menu():
+
     tag rpg_panel
     modal True
     zorder 200
-    on "show" action Function(migrate_inventory_grid)
+
+    on "show" action Function(inventory_open_prepare)
     on "hide" action Function(inventory_close_cleanup)
-    key "game_menu" action [Function(inventory_close_cleanup), Hide("storage_menu")]
-    use inventory_grid_screen([Function(inventory_close_cleanup), Hide("storage_menu")])
+
+    key "game_menu" action Hide("storage_menu")
+
+    use inventory_grid_screen(
+        Hide("storage_menu")
+    )
 
 
 screen storage_entry(item_name, amount):
@@ -183,7 +189,6 @@ screen loadout_menu():
     key "game_menu" action Hide("loadout_menu")
 
     modal True
-
 
     add "#00000070"
 
