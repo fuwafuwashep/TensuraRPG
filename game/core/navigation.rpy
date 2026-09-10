@@ -1,3 +1,5 @@
+default pending_nav_action = None
+
 init -5 python:
     def enter_location(location_id):
         if location_id not in LOCATIONS:
@@ -52,46 +54,115 @@ init -5 python:
         return True
 
 label explore_location:
+
     $ navigation_active = True
-    while True:
-        $ navigation_active = True
-        $ current_view = location_view(current_location)
-        scene expression current_view["background"]
-        $ automatic_events = available_events(automatic=True)
-        if automatic_events:
-            call run_story_event(automatic_events[0])
-        else:
-            window hide
-            call screen location_choices
+    $ current_view = location_view(current_location)
 
-            $ nav_action = resolve_location_action(_return)
+    scene expression current_view["background"]
 
-            # A toolbar/menu screen can close without returning a
-            # location action. Give Ren'Py an interaction before
-            # restarting the exploration loop.
-            if nav_action is None:
-                $ renpy.pause(0.05, hard=True)
+    $ automatic_events = available_events(automatic=True)
 
-            if nav_action is not None:
-                if nav_action["kind"] == "exit":
-                    $ enter_location(nav_action["target"])
-                elif nav_action["kind"] == "label":
-                    $ navigation_active = False
-                    jump expression nav_action["label"]
-                elif nav_action["kind"] == "gather":
-                    if gather_resource(nav_action):
-                        $ gathered_name = ITEM_DATA[nav_action["item"]]["name"]
-                        n "Stored: [gathered_name]."
-                elif nav_action["kind"] == "battle":
-                    call battle_enemy(nav_action["enemy"], encounter_id=nav_action.get("encounter"))
-                elif nav_action["kind"] == "npc":
-                    call npc_interaction(nav_action["character"])
-                elif nav_action["kind"] == "event":
-                    call run_story_event(nav_action["event"])
-                elif nav_action["kind"] == "rest":
-                    $ restore_player()
-                    n "Rimuru rests. HP, magicules and move uses are restored."
-                elif nav_action["kind"] == "discover":
-                    $ apply_effects(nav_action["effects"])
-                    $ discovery_text = nav_action["message"]
-                    n "[discovery_text]"
+    if automatic_events:
+
+        call run_story_event(automatic_events[0])
+
+        if _return is False:
+            $ renpy.pause(0.1, hard=True)
+
+        jump explore_location
+
+
+    window hide
+
+    $ pending_nav_action = None
+
+    show screen location_choices
+
+    while pending_nav_action is None:
+        $ renpy.pause()
+
+    hide screen location_choices
+
+    $ nav_action = resolve_location_action(pending_nav_action)
+    $ pending_nav_action = None
+
+
+    if nav_action is None:
+
+        jump explore_location
+
+
+    if nav_action["kind"] == "exit":
+
+        $ enter_location(nav_action["target"])
+
+        jump explore_location
+
+
+    elif nav_action["kind"] == "label":
+
+        $ navigation_active = False
+
+        jump expression nav_action["label"]
+
+
+    elif nav_action["kind"] == "gather":
+
+        if gather_resource(nav_action):
+
+            $ gathered_name = ITEM_DATA[nav_action["item"]]["name"]
+
+            n "Stored: [gathered_name]."
+
+        jump explore_location
+
+
+    elif nav_action["kind"] == "battle":
+
+        call battle_enemy(
+            nav_action["enemy"],
+            encounter_id=nav_action.get("encounter")
+        )
+
+        jump explore_location
+
+
+    elif nav_action["kind"] == "npc":
+
+        call npc_interaction(
+            nav_action["character"]
+        )
+
+        jump explore_location
+
+
+    elif nav_action["kind"] == "event":
+
+        call run_story_event(
+            nav_action["event"]
+        )
+
+        jump explore_location
+
+
+    elif nav_action["kind"] == "rest":
+
+        $ restore_player()
+
+        n "Rimuru rests. HP, magicules and move uses are restored."
+
+        jump explore_location
+
+
+    elif nav_action["kind"] == "discover":
+
+        $ apply_effects(nav_action["effects"])
+
+        $ discovery_text = nav_action["message"]
+
+        n "[discovery_text]"
+
+        jump explore_location
+
+
+    jump explore_location

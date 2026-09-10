@@ -63,15 +63,6 @@ init -4 python:
         "footprint": (2, 1),
     })
 
-    ITEM_DATA.setdefault("veldora_stomach", {
-        "name": "Veldora",
-        "description": "The Storm Dragon, quarantined inside Predator while Unlimited Imprisonment is analyzed.",
-        "category": "Special Items",
-        "stackable": False,
-        "max_stack": 1,
-        "footprint": (7, 7),
-    })
-
     # Explicitly lock the requested stack sizes / footprints.
     ITEM_DATA["hipokute"]["name"] = "Hipoutke Herb"
     ITEM_DATA["hipokute"]["max_stack"] = 64
@@ -639,7 +630,7 @@ screen inventory_grid_screen(close_action):
     modal True
     zorder 250
 
-    key "z" action Function(inventory_split_held_stack)
+    key "K_z" action Function(inventory_split_held_stack)
 
     add "#05080ED9"
 

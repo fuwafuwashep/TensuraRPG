@@ -76,7 +76,13 @@ screen location_choices():
                         id action["id"]
                         xfill True
                         sensitive action["enabled"]
-                        action Return(action["id"])
+                        action [
+                            SetVariable(
+                                "pending_nav_action",
+                                action["id"]
+                            ),
+                            Hide("location_choices")
+                        ]
 
 screen rpg_inventory_contents(battle=False):
     style_prefix "rpg"

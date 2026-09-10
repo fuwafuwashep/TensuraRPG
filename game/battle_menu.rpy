@@ -614,7 +614,7 @@ screen battle_command_menu(
     enemy_hp,
     enemy_max_hp,
     enemy_sprite=None,
-    battle_background="images/backgrounds/VeldoracaveBattle.png",
+    battle_background="images/stormdragons_cave_backgrounds/StormdragonsCaveBattle.png",
     predator_allowed=True,
     can_run=True
 ):
